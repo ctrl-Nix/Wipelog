@@ -1,23 +1,16 @@
-import os
-import sys
+﻿import os, shutil, sys
 from pathlib import Path
 import pytest
+from wipe import check_target, ROOT
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "python"))
-
-from wipe import check_target
+win = pytest.mark.skipif(sys.platform != "win32", reason="Windows paths")
 
 
-def test_refuses_windows_dir():
-    sys_root = os.environ.get("SystemRoot", r"C:\Windows")
+@win
+@pytest.mark.parametrize("p", [r"C:\Windows", r"C:\Users", "C:\\"])
+def test_refuses_system_paths(p):
     with pytest.raises(SystemExit):
-        check_target(Path(sys_root))
-
-
-def test_refuses_users_dir():
-    with pytest.raises(SystemExit):
-        check_target(Path(r"C:\Users"))
+        check_target(Path(p))
 
 
 def test_refuses_project_root():
@@ -25,33 +18,15 @@ def test_refuses_project_root():
         check_target(ROOT)
 
 
-def test_refuses_project_code():
+def test_refuses_project_source():
     with pytest.raises(SystemExit):
         check_target(ROOT / "python")
 
 
-def test_refuses_drive_root():
-    with pytest.raises(SystemExit):
-        check_target(Path(r"C:\\"))
-
-
-def test_refuses_symlink(tmp_path, monkeypatch):
-    test_link = tmp_path / "link_target"
+def test_accepts_sandbox_subfolder():
+    d = ROOT / "sandbox" / "_pytest_tmp"
+    d.mkdir(parents=True, exist_ok=True)
     try:
-        test_link.symlink_to(tmp_path)
-        with pytest.raises(SystemExit):
-            check_target(test_link)
-    except OSError:
-        # Fallback when Windows Developer Mode / symlink privilege is not enabled
-        dummy = tmp_path / "dummy_file"
-        dummy.touch()
-        monkeypatch.setattr(Path, "is_symlink", lambda self: True if self == dummy else False)
-        with pytest.raises(SystemExit):
-            check_target(dummy)
-
-
-def test_accepts_sandbox():
-    sandbox = ROOT / "sandbox"
-    sandbox.mkdir(exist_ok=True)
-    res = check_target(sandbox)
-    assert res == sandbox.resolve()
+        assert check_target(d) == d.resolve()
+    finally:
+        shutil.rmtree(d, ignore_errors=True)

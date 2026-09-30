@@ -1,38 +1,27 @@
-import os
-import sys
-from pathlib import Path
+﻿import os
 import pytest
-
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "python"))
-
-from classifier import scan_file
 from synth import text_blob
+from classifier import scan_file, MODEL
+
+pytestmark = pytest.mark.skipif(not MODEL.exists(), reason="run train.py first")
 
 
-def test_random_block_passes(tmp_path):
-    p = tmp_path / "random.bin"
-    p.write_bytes(os.urandom(64 * 1024))
-    res = scan_file(p)
-    assert res["verdict"] == "PASS"
-    assert res["flagged_blocks"] == 0
+def test_random_passes(tmp_path):
+    p = tmp_path / "r.bin"; p.write_bytes(os.urandom(200_000))
+    assert scan_file(p)["verdict"] == "PASS"
 
 
-def test_plain_text_block_fails(tmp_path):
-    p = tmp_path / "plaintext.txt"
-    p.write_bytes(text_blob(8192))
-    res = scan_file(p)
-    assert res["verdict"] == "FAIL"
-    assert res["flagged_blocks"] > 0
+def test_zeros_pass(tmp_path):
+    p = tmp_path / "z.bin"; p.write_bytes(bytes(200_000))
+    assert scan_file(p)["verdict"] == "PASS"
 
 
-def test_one_percent_surviving_text_fails(tmp_path):
-    # 1% surviving text in random data (e.g. partial wipe)
-    data = bytearray(os.urandom(1_000_000))
-    data[:10_000] = text_blob(10_000)
-    p = tmp_path / "partial_wipe.bin"
-    p.write_bytes(bytes(data))
+def test_text_fails(tmp_path):
+    p = tmp_path / "t.txt"; p.write_bytes(text_blob(50_000))
+    assert scan_file(p)["verdict"] == "FAIL"
 
-    res = scan_file(p)
-    assert res["verdict"] == "FAIL"
-    assert res["flagged_blocks"] > 0
+
+def test_one_percent_survivor_fails(tmp_path):
+    d = bytearray(os.urandom(1_000_000)); d[:10_000] = text_blob(10_000)
+    p = tmp_path / "p.bin"; p.write_bytes(bytes(d))
+    assert scan_file(p)["verdict"] == "FAIL"

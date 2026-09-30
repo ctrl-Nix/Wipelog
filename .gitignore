@@ -53,3 +53,16 @@ tampered.json
 ledger*.jsonl
 .venv/
 
+
+keys/private.pem
+manifest*.json
+certificate*.json
+ledger*.jsonl
+outputs/
+sandbox/
+*.joblib
+tampered.json
+*.vhd
+*.img
+.venv/
+__pycache__/
