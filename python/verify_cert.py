@@ -3,7 +3,7 @@ import argparse, hashlib, json, sys
 from pathlib import Path
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, load_pem_public_key
-from certificate import canonical, PUB
+from certificate import canonical, key_id, PUB
 
 
 def fail(msg):
@@ -52,6 +52,7 @@ def main():
     print(f"  device  : {payload['device']['label']} ({payload['device']['hostname']})")
     print(f"  issued  : {payload['issued_at']}")
     print(f"  result  : {payload['result']}  files={payload['erasure']['file_count']}")
+    print(f"  key_id  : {key_id(trusted_hex)}   (issuer fingerprint)")
 
 
 if __name__ == "__main__":

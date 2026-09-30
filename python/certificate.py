@@ -15,6 +15,10 @@ def canonical(obj) -> bytes:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
 
 
+def key_id(pub_hex: str) -> str:
+    return hashlib.sha256(bytes.fromhex(pub_hex)).hexdigest()[:16]
+
+
 def ensure_keys():
     if PRIV.exists() and PUB.exists():
         return
@@ -71,9 +75,11 @@ def main():
     ensure_keys()
     key = load_pem_private_key(PRIV.read_bytes(), password=None)
     payload = build_payload(Path(a.manifest), a.label)
+    pub_hex = key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
     cert = {
         "algorithm": "Ed25519",
-        "public_key": key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw).hex(),
+        "key_id": key_id(pub_hex),
+        "public_key": pub_hex,
         "payload": payload,
         "signature": key.sign(canonical(payload)).hex(),
     }
@@ -84,6 +90,7 @@ def main():
     print(f"  cert_id : {payload['cert_id']}")
     print(f"  result  : {payload['result']}")
     print(f"  digest  : {hashlib.sha256(canonical(payload)).hexdigest()[:32]}")
+    print(f"  key_id  : {cert['key_id']}")
     print(f"  ledger  : entry #{e['index']}  {e['entry_hash'][:16]}...")
 
 

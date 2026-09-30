@@ -50,4 +50,6 @@ manifest*.json
 certificate*.json
 tampered.json
 *.joblib
+ledger*.jsonl
+.venv/
 

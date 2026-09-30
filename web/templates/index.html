@@ -220,6 +220,7 @@
                 <th>Size</th>
                 <th>Pre-Wipe Verdict</th>
                 <th>Post-Wipe Verdict</th>
+                <th>Read-Back Verification</th>
                 <th>Flagged Blocks (Pre &rarr; Post)</th>
                 <th>SHA-256 Before</th>
                 <th>SHA-256 After</th>
@@ -331,6 +332,14 @@
             <div class="lbl">AI Verification Verdict</div>
             <div class="val" style="color: var(--accent-emerald);">PASS (0 Residual Blocks)</div>
           </div>
+          <div class="detail-item">
+            <div class="lbl">Audit Ledger Status</div>
+            <div class="val" style="color: var(--accent-emerald);" id="cert-ledger-val">Recorded &bull; Chain Intact</div>
+          </div>
+          <div class="detail-item">
+            <div class="lbl">Ledger Entry #</div>
+            <div class="val mono" id="cert-ledger-entry-val">-</div>
+          </div>
         </div>
 
         <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem;">
@@ -379,6 +388,58 @@
         <!-- Verification Results Box -->
         <div id="verify-result-box" class="verify-result">
           <div id="verify-result-content"></div>
+        </div>
+      </div>
+
+      <!-- Audit Ledger Section -->
+      <div class="verify-panel" id="ledger-audit-panel" style="margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem;">
+          <div>
+            <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+              Append-Only Audit Ledger (ledger.jsonl)
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Every issued certificate is permanently hashed into a tamper-evident SHA-256 blockchain ledger.
+            </p>
+          </div>
+          <div id="ledger-badge-container">
+            <span class="badge badge-pass" id="ledger-live-badge">CHAIN INTACT</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+          <button id="btn-verify-ledger" class="btn btn-secondary" onclick="verifyLedger()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Verify Ledger Chain
+          </button>
+          <button id="btn-ledger-tamper-demo" class="btn btn-outline" style="border-color: var(--accent-rose); color: var(--accent-rose);" onclick="runLedgerTamperDemo()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            Run Ledger Tamper Demo
+          </button>
+        </div>
+
+        <!-- Ledger Result Box -->
+        <div id="ledger-result-box" class="verify-result" style="margin-bottom: 1.25rem;">
+          <div id="ledger-result-content"></div>
+        </div>
+
+        <!-- Recent Ledger Entries Table -->
+        <div class="table-wrapper">
+          <table class="data-table" id="ledger-table">
+            <thead>
+              <tr>
+                <th>Entry #</th>
+                <th>Timestamp</th>
+                <th>Certificate ID</th>
+                <th>Entry Hash</th>
+                <th>Prev Hash</th>
+              </tr>
+            </thead>
+            <tbody id="ledger-tbody">
+              <tr><td colspan="5" style="text-align: center; color: var(--text-dim);">Loading audit ledger entries...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
