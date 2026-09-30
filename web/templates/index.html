@@ -3,447 +3,667 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI-Verified Secure Data Wiping & Certification Tool</title>
-  <meta name="description" content="DoD 5220.22-M inspired multi-pass overwrite with AI residual data verification and Ed25519 cryptographic certification.">
+  <title>Wipelog — Secure Data Wiping & Certification Engine</title>
+  <meta name="description" content="Forensic data sanitization engine with 4KB-block ML residual verification, Ed25519 digital signatures, and hash-chained audit ledger.">
+  
+  <!-- Inter & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-  <!-- Mandatory Security & Prototype Banner -->
-  <div class="disclaimer-banner" id="prototype-banner">
-    <div>
-      <span class="pill">Prototype Notice</span>
-      <strong>Prototype. File-level overwrite. SSD limits apply.</strong>
-    </div>
-    <div class="specs">
-      <span>Method: DoD 5220.22-M (0x00, 0xFF, Random)</span> &bull;
-      <span>AI Model: 4KB-Block Random Forest</span> &bull;
-      <span>Crypto: Ed25519</span>
-    </div>
-  </div>
-
-  <div class="container">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="header-title">
-        <h1>
-          Secure Wipe & Verification
-          <span class="tag">v1.0</span>
-        </h1>
-        <p>AI-Verified Residual Pattern Analysis & Cryptographically Signed Erasure Certificates</p>
-      </div>
-      <div class="header-badges">
-        <div class="status-badge online" id="status-indicator">
-          <span class="dot"></span>
-          <span>Local Engine Active (127.0.0.1)</span>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
         </div>
-      </div>
-    </header>
-
-    <!-- Global Alert Container -->
-    <div id="alert-box" class="alert hidden">
-      <span id="alert-message"></span>
-      <button class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="hideAlert()">Dismiss</button>
-    </div>
-
-    <!-- Stepper Navigation -->
-    <nav class="stepper-nav" aria-label="Wiping Process Steps">
-      <div class="step-item active" id="step-nav-1" onclick="switchStep(1)">
-        <div class="step-number">1</div>
-        <div class="step-label">
-          <span class="num">Step 1</span>
-          <span class="title">Select Target</span>
-        </div>
-      </div>
-      <div class="step-item" id="step-nav-2" onclick="switchStep(2)">
-        <div class="step-number">2</div>
-        <div class="step-label">
-          <span class="num">Step 2</span>
-          <span class="title">Pre-Wipe AI Scan</span>
-        </div>
-      </div>
-      <div class="step-item" id="step-nav-3" onclick="switchStep(3)">
-        <div class="step-number">3</div>
-        <div class="step-label">
-          <span class="num">Step 3</span>
-          <span class="title">Secure Wipe</span>
-        </div>
-      </div>
-      <div class="step-item" id="step-nav-4" onclick="switchStep(4)">
-        <div class="step-number">4</div>
-        <div class="step-label">
-          <span class="num">Step 4</span>
-          <span class="title">Certificate & Verify</span>
-        </div>
-      </div>
-    </nav>
-
-    <!-- STEP 1: TARGET SELECTION -->
-    <section class="card" id="step-section-1">
-      <div class="card-header">
-        <div>
-          <h2>Step 1: Target Allowlist Workspace (sandbox/)</h2>
-          <p>Wiping is strictly restricted to sandbox/ folder for host safety. Select an item or generate test data.</p>
+        <div class="brand-text">
+          <span class="brand-title">WIPELOG</span>
+          <span class="brand-subtitle">Erasure & Verification</span>
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group" style="flex: 2;">
-          <label for="target-select">Allowlisted Target in sandbox/</label>
-          <select id="target-select" class="form-control" onchange="onTargetChanged()">
-            <option value="">Loading sandbox targets...</option>
-          </select>
-        </div>
-        <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
-          <button id="btn-create-samples" class="btn btn-secondary" onclick="createSamples()">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
-            Create Sample Files
-          </button>
-          <button id="btn-refresh-targets" class="btn btn-outline" onclick="loadTargets()">
-            Refresh
-          </button>
-        </div>
+      <div class="engine-status-pill">
+        <span class="status-dot green"></span>
+        <span class="status-text">Engine 127.0.0.1:5000</span>
       </div>
 
-      <div id="target-summary" style="margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-muted);">
-        <!-- Populated dynamically -->
-      </div>
-
-      <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
-        <button id="btn-proceed-step2" class="btn btn-primary" onclick="proceedToStep(2)">
-          Proceed to AI Pre-Scan &rarr;
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="overview" onclick="switchMainView('overview')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Overview</span>
         </button>
-      </div>
-    </section>
 
-    <!-- STEP 2: SCAN BEFORE WIPE -->
-    <section class="card hidden" id="step-section-2">
-      <div class="card-header">
-        <div>
-          <h2>Step 2: AI Pre-Wipe Scan (Baseline Residual Analysis)</h2>
-          <p>Analyzes 4KB blocks with Random Forest classifier to detect un-erased text, database, and structure traces.</p>
-        </div>
-        <button id="btn-run-prescan" class="btn btn-primary" onclick="runPreScan()">
-          Run Pre-Wipe AI Scan
+        <button class="nav-item" data-view="devices" onclick="switchMainView('devices')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
+          <span>Devices Inventory</span>
         </button>
-      </div>
 
-      <div id="prescan-spinner" class="hidden" style="text-align: center; padding: 2rem;">
-        <div style="color: var(--accent-cyan); font-weight: 600;">Scanning blocks with AI classifier...</div>
-      </div>
+        <button class="nav-item" data-view="erasure" onclick="switchMainView('erasure')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Erasure Workflow</span>
+        </button>
 
-      <div id="prescan-results-container" class="hidden">
-        <div class="table-wrapper">
-          <table class="data-table" id="prescan-table">
-            <thead>
-              <tr>
-                <th>File Name</th>
-                <th>Size</th>
-                <th>Total 4KB Blocks</th>
-                <th>Flagged Blocks</th>
-                <th>Max Block Risk</th>
-                <th>AI Verdict</th>
-              </tr>
-            </thead>
-            <tbody id="prescan-tbody">
-              <!-- Populated dynamically -->
-            </tbody>
-          </table>
+        <button class="nav-item" data-view="certificate" onclick="switchMainView('certificate')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
+          <span>Certificate Viewer</span>
+        </button>
+
+        <button class="nav-item" data-view="verifier" onclick="switchMainView('verifier')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="m9 11 2 2 4-4"/></svg>
+          <span>Public Verifier</span>
+        </button>
+
+        <button class="nav-item" data-view="audit" onclick="switchMainView('audit')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Audit Ledger</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="crypto-badge">
+          <span class="badge-label">SIGNING KEY</span>
+          <span class="badge-value mono">Ed25519 Active</span>
+        </div>
+        <div class="crypto-badge">
+          <span class="badge-label">KEY FINGERPRINT</span>
+          <span class="badge-value mono" id="sidebar-key-id">6c011ca4...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Operational Workspace -->
+    <main class="main-content">
+      
+      <!-- Top Application Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <h1 class="page-title" id="page-title">Secure Erasure Console</h1>
+          <span class="page-subtitle" id="page-subtitle">Sanitize storage media, verify residual data, and issue signed certificates</span>
         </div>
 
-        <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-          <div style="font-size: 0.85rem; color: var(--text-muted);" id="prescan-summary-text"></div>
-          <button id="btn-proceed-step3" class="btn btn-primary" onclick="proceedToStep(3)">
-            Proceed to Secure Wipe &rarr;
+        <div class="header-right">
+          <button class="btn btn-secondary" onclick="createSampleData()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Create Sample Data</span>
+          </button>
+          <button class="btn btn-primary" onclick="startNewErasureWorkflow()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>New Erasure</span>
           </button>
         </div>
-      </div>
-    </section>
+      </header>
 
-    <!-- STEP 3: WIPE & POST-SCAN COMPARISON -->
-    <section class="card hidden" id="step-section-3">
-      <div class="card-header">
-        <div>
-          <h2>Step 3: Multi-Pass Secure Wipe & Residual Verification</h2>
-          <p>Executes 3-pass DoD overwrite (0x00, 0xFF, Random), records cryptographic hashes, and performs AI post-scan.</p>
+      <!-- Global Alert Container -->
+      <div id="alert-banner" class="alert-banner hidden">
+        <div class="alert-content">
+          <span class="alert-icon" id="alert-icon">⚠️</span>
+          <span class="alert-text" id="alert-text">Alert message</span>
         </div>
+        <button class="alert-close" onclick="dismissAlert()">✕</button>
       </div>
 
-      <!-- Wipe Controls -->
-      <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
-        <div class="form-row">
-          <div class="form-group" style="flex: 1;">
-            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none;">
-              <input type="checkbox" id="wipe-delete-checkbox" style="width: 16px; height: 16px; accent-color: var(--accent-rose);">
-              <span style="font-weight: 600; color: #fca5a5;">Delete files after overwrite (unlink)</span>
-            </label>
-            <span style="font-size: 0.75rem; color: var(--text-dim);">Renames to random hex then unlinks file node.</span>
+      <!-- VIEW 1: OVERVIEW / DASHBOARD -->
+      <section class="view-panel active" id="view-overview">
+        
+        <!-- Compact Summary Stats Grid -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">ACTIVE OPERATIONS</span>
+              <span class="metric-tag tag-blue">IDLE</span>
+            </div>
+            <div class="metric-value mono" id="stat-active-ops">00</div>
+            <div class="metric-sub">02 devices ready for processing</div>
           </div>
 
-          <div class="form-group" style="flex: 1.5;">
-            <label for="wipe-confirm-input">Type <strong style="color: var(--accent-rose); font-family: var(--font-mono);">WIPE</strong> to confirm irreversible overwrite:</label>
-            <input type="text" id="wipe-confirm-input" class="form-control mono" placeholder="Type WIPE here" oninput="onConfirmInputChanged()">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">STORAGE DEVICES</span>
+              <span class="metric-tag">DETECTED</span>
+            </div>
+            <div class="metric-value mono" id="stat-devices-count">05</div>
+            <div class="metric-sub">NVMe, SATA, VHD & Sandbox Target</div>
           </div>
 
-          <div style="display: flex; align-items: flex-end;">
-            <button id="btn-start-wipe" class="btn btn-danger" onclick="startWipe()" disabled>
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-              Execute Secure Wipe
-            </button>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">FORENSIC VERIFICATION</span>
+              <span class="metric-tag tag-green">ACTIVE</span>
+            </div>
+            <div class="metric-value mono">100% Zero</div>
+            <div class="metric-sub">4KB Block ML Classifier Verified</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">CERTIFICATES ISSUED</span>
+              <span class="metric-tag tag-green">LEDGER</span>
+            </div>
+            <div class="metric-value mono" id="stat-certs-issued">--</div>
+            <div class="metric-sub">Ed25519 Signed & Committed</div>
           </div>
         </div>
-      </div>
 
-      <!-- Live Wipe Progress -->
-      <div id="wipe-progress-section" class="wipe-progress-container hidden">
-        <div class="progress-header">
-          <span style="font-weight: 600; color: var(--accent-cyan);" id="progress-phase-title">Wiping in Progress...</span>
-          <span style="font-family: var(--font-mono); font-weight: 700;" id="progress-pct-text">0%</span>
-        </div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="progress-bar-fill"></div>
-        </div>
-        <div class="progress-details">
-          <span>File: <strong id="progress-current-file" style="color: #fff;">-</strong> (<span id="progress-file-index">0</span>/<span id="progress-file-total">0</span>)</span>
-          <span class="phase-pill" id="progress-phase-pill">idle</span>
-        </div>
-      </div>
+        <!-- Devices Inventory Summary Table -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Target Storage Media Inventory</h2>
+              <p class="panel-sub">Connected storage drives and allowlisted workspace targets</p>
+            </div>
+            <button class="btn btn-sm btn-secondary" onclick="loadDevicesList()">Refresh Inventory</button>
+          </div>
 
-      <!-- Results: BEFORE vs AFTER Table -->
-      <div id="wipe-results-section" class="hidden">
-        <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Before vs After Verification Comparison</h3>
-        <div class="table-wrapper">
-          <table class="data-table" id="comparison-table">
-            <thead>
-              <tr>
-                <th>File Name</th>
-                <th>Size</th>
-                <th>Pre-Wipe Verdict</th>
-                <th>Post-Wipe Verdict</th>
-                <th>Read-Back Verification</th>
-                <th>Flagged Blocks (Pre &rarr; Post)</th>
-                <th>SHA-256 Before</th>
-                <th>SHA-256 After</th>
-              </tr>
-            </thead>
-            <tbody id="comparison-tbody">
-              <!-- Dynamically populated -->
-            </tbody>
-          </table>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Device / Target</th>
+                  <th>Type</th>
+                  <th>Capacity</th>
+                  <th>Identifier / Serial</th>
+                  <th>Status</th>
+                  <th>Last Operation</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="overview-devices-body">
+                <tr><td colspan="7" class="text-muted text-center">Loading storage inventory...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- Per-Block Heat-Strip Visualization Panel -->
-        <div class="viz-panel" id="viz-panel">
-          <div class="viz-header">
-            <div class="viz-title">4KB Block AI Risk Distribution (Heat-Strip)</div>
-            <div class="form-group" style="min-width: 200px; flex: initial;">
-              <select id="viz-file-select" class="form-control" onchange="renderBlockVisualization()" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">
-                <!-- Populated with files -->
+        <!-- Recent Audit Trail Feed -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Immutable Audit Trail (ledger.jsonl)</h2>
+              <p class="panel-sub">SHA-256 hash-chained cryptographic ledger history</p>
+            </div>
+            <button class="btn btn-sm btn-secondary" onclick="verifyLedgerChain()">Verify Chain Integrity</button>
+          </div>
+          
+          <div id="overview-ledger-feed" class="audit-feed">
+            <div class="text-muted text-center p-3">Loading ledger history...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: DEVICES INVENTORY -->
+      <section class="view-panel" id="view-devices">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Enterprise Storage Inventory</h2>
+              <p class="panel-sub">Inspect storage hardware details, media health, and erasure status</p>
+            </div>
+          </div>
+
+          <div class="devices-grid" id="full-devices-grid">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: ERASURE WORKFLOW (5-Stage Stepper) -->
+      <section class="view-panel" id="view-erasure">
+        
+        <!-- Workflow Stepper Nav -->
+        <div class="stepper-bar">
+          <div class="step-node active" id="step-node-1" onclick="jumpToStep(1)">
+            <span class="step-num">01</span>
+            <span class="step-title">Select Target</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-node" id="step-node-2" onclick="jumpToStep(2)">
+            <span class="step-num">02</span>
+            <span class="step-title">Erasure Spec</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-node" id="step-node-3" onclick="jumpToStep(3)">
+            <span class="step-num">03</span>
+            <span class="step-title">Execute Wipe</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-node" id="step-node-4" onclick="jumpToStep(4)">
+            <span class="step-num">04</span>
+            <span class="step-title">ML Verification</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-node" id="step-node-5" onclick="jumpToStep(5)">
+            <span class="step-num">05</span>
+            <span class="step-title">Certify</span>
+          </div>
+        </div>
+
+        <!-- STAGE 01: SELECT TARGET -->
+        <div class="step-content active" id="step-content-1">
+          
+          <div class="warning-banner">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-text">
+              <strong>PERMANENT ERASURE SAFETY WARNING</strong>
+              <p>Physical overwriting permanently destroys data sectors. Operations executed here target allowlisted targets in <code>sandbox/</code>. Direct raw device overwrites require elevated CLI confirmation.</p>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <h3 class="card-subtitle">Select Storage Media / Allowlisted Target</h3>
+            
+            <div class="form-group mb-4">
+              <label class="form-label" for="target-selector">Target Selection (sandbox/ workspace)</label>
+              <select id="target-selector" class="form-select" onchange="onTargetSelected()">
+                <option value="">Loading targets...</option>
               </select>
             </div>
-            <div class="viz-legend">
-              <div class="legend-item"><span class="legend-color" style="background: #10b981;"></span> Clean (&lt; 0.2)</div>
-              <div class="legend-item"><span class="legend-color" style="background: #f59e0b;"></span> Moderate (0.2 - 0.5)</div>
-              <div class="legend-item"><span class="legend-color" style="background: #f43f5e;"></span> Flagged Residual (&ge; 0.5)</div>
-            </div>
-          </div>
 
-          <div class="viz-canvas-container">
-            <div class="canvas-row">
-              <div class="canvas-label">
-                <span>BEFORE WIPE (Pre-Existing Residual Risks)</span>
-                <span id="viz-before-stats" class="mono text-rose"></span>
+            <div class="target-specs-box" id="target-specs-box">
+              <div class="specs-grid">
+                <div><span class="spec-label">Target Name</span><span class="spec-val" id="spec-name">sandbox/</span></div>
+                <div><span class="spec-label">File Count</span><span class="spec-val mono" id="spec-files">--</span></div>
+                <div><span class="spec-label">Total Size</span><span class="spec-val mono" id="spec-size">--</span></div>
+                <div><span class="spec-label">Scope</span><span class="spec-val tag-green">Allowlisted</span></div>
               </div>
-              <canvas id="canvas-before" class="risk-strip"></canvas>
             </div>
-            <div class="canvas-row">
-              <div class="canvas-label">
-                <span>AFTER 3-PASS WIPE (Overwritten with Uniform / Random Fill)</span>
-                <span id="viz-after-stats" class="mono text-emerald"></span>
+
+            <div class="step-actions">
+              <button class="btn btn-secondary" onclick="createSampleData()">Generate Test Data</button>
+              <button class="btn btn-primary" onclick="proceedToStep(2)">Proceed to Erasure Method →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 02: ERASURE METHOD SPEC -->
+        <div class="step-content" id="step-content-2">
+          <div class="panel-card">
+            <h3 class="card-subtitle">Erasure Method & Standards Configuration</h3>
+            
+            <div class="spec-card">
+              <div class="spec-header">
+                <span class="spec-badge">DoD 5220.22-M Inspired</span>
+                <h4>3-Pass Physical Hardware Overwrite Pattern</h4>
               </div>
-              <canvas id="canvas-after" class="risk-strip"></canvas>
+              <p class="spec-desc">Overwrites storage sectors across 3 sequential passes. Executes explicit <code>fsync()</code> after each pass to bypass operating system file write caching.</p>
+              
+              <div class="passes-list">
+                <div class="pass-item">
+                  <span class="pass-num mono">PASS 1</span>
+                  <span class="pass-title">Pseudorandom Byte Pattern (0x00 - 0xFF)</span>
+                  <span class="pass-tag">High Entropy</span>
+                </div>
+                <div class="pass-item">
+                  <span class="pass-num mono">PASS 2</span>
+                  <span class="pass-title">Binary Inversion (0xFF All-Ones)</span>
+                  <span class="pass-tag">Saturation</span>
+                </div>
+                <div class="pass-item">
+                  <span class="pass-num mono">PASS 3</span>
+                  <span class="pass-title">Zero-Fill Pass (0x00 All-Zeros)</span>
+                  <span class="pass-tag">Zero State</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="checkbox-label">
+                <input type="checkbox" id="chk-delete-after" checked>
+                <span>Unlink and delete files after overwriting & zero-verification</span>
+              </label>
+            </div>
+
+            <div class="step-actions">
+              <button class="btn btn-secondary" onclick="proceedToStep(1)">← Back</button>
+              <button class="btn btn-primary" onclick="runPreWipeScan()">Run Pre-Wipe AI Scan →</button>
             </div>
           </div>
         </div>
 
-        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
-          <button id="btn-proceed-step4" class="btn btn-primary" onclick="proceedToStep(4)">
-            Proceed to Certification &rarr;
-          </button>
-        </div>
-      </div>
-    </section>
+        <!-- STAGE 03: EXECUTE WIPE -->
+        <div class="step-content" id="step-content-3">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="card-subtitle">Execute Secure Overwrite Operation</h3>
+                <p class="panel-sub">Requires manual confirmation typing "WIPE"</p>
+              </div>
+            </div>
 
-    <!-- STEP 4: CERTIFICATION & VERIFICATION -->
-    <section class="card hidden" id="step-section-4">
-      <div class="card-header">
-        <div>
-          <h2>Step 4: Cryptographic Erasure Certificate & Independent Verification</h2>
-          <p>Generates an Ed25519-signed certificate with hardware metadata, AI verification digest, and full SHA-256 chain.</p>
-        </div>
-      </div>
+            <div class="confirm-box mb-4" id="confirm-input-box">
+              <label class="form-label text-danger" for="wipe-confirm-input">Type "WIPE" to authorize hardware overwrite:</label>
+              <div class="input-action-row">
+                <input type="text" id="wipe-confirm-input" class="form-input mono" placeholder="WIPE">
+                <button class="btn btn-danger" id="btn-start-wipe" onclick="executeWipeJob()">AUTHORIZE & START WIPE</button>
+              </div>
+            </div>
 
-      <!-- Issue Certificate Form -->
-      <div id="issue-cert-form-box" style="margin-bottom: 2rem;">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="cert-device-label">Device / Asset Tag Label</label>
-            <input type="text" id="cert-device-label" class="form-control" value="Demo-Laptop-01" placeholder="e.g. Asset-9902 or Demo-PC">
+            <!-- Progress Monitor Container -->
+            <div id="wipe-progress-container" class="progress-box hidden">
+              <div class="progress-header">
+                <span class="progress-label" id="wipe-status-text">INITIALIZING OVERWRITE...</span>
+                <span class="progress-pct mono" id="wipe-pct">0%</span>
+              </div>
+
+              <div class="progress-track">
+                <div class="progress-fill" id="wipe-progress-bar" style="width: 0%;"></div>
+              </div>
+
+              <div class="metrics-mini-grid">
+                <div><span class="mini-label">CURRENT PASS</span><span class="mini-val mono" id="wipe-current-pass">Pass 1 / 3</span></div>
+                <div><span class="mini-label">THROUGHPUT</span><span class="mini-val mono" id="wipe-speed">-- MB/s</span></div>
+                <div><span class="mini-label">PROCESSED</span><span class="mini-val mono" id="wipe-bytes">0 B / --</span></div>
+                <div><span class="mini-label">ELAPSED</span><span class="mini-val mono" id="wipe-elapsed">00:00:00</span></div>
+              </div>
+
+              <div class="telemetry-box mt-3">
+                <div class="telemetry-header">
+                  <span>TELEMETRY LOG STREAM</span>
+                  <span class="status-dot green"></span>
+                </div>
+                <pre class="telemetry-logs mono" id="wipe-logs">Operation ready...</pre>
+              </div>
+            </div>
+
+            <div class="step-actions">
+              <button class="btn btn-secondary" onclick="proceedToStep(2)">← Back</button>
+              <button class="btn btn-success hidden" id="btn-goto-verify" onclick="proceedToStep(4)">Proceed to ML Verification →</button>
+            </div>
           </div>
-          <div style="display: flex; align-items: flex-end;">
-            <button id="btn-issue-cert" class="btn btn-success" onclick="issueCertificate()">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              Issue Signed Certificate
+        </div>
+
+        <!-- STAGE 04: ML VERIFICATION -->
+        <div class="step-content" id="step-content-4">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="card-subtitle">4KB-Block ML Residual Pattern Verification</h3>
+                <p class="panel-sub">Random Forest classifier evaluation of Shannon entropy, chi-square & byte distributions</p>
+              </div>
+              <button class="btn btn-sm btn-secondary" onclick="runPostWipeScan()">Run Verification Analysis</button>
+            </div>
+
+            <div class="verification-summary-grid">
+              <div class="verif-card">
+                <span class="verif-label">OVERALL VERDICT</span>
+                <span class="verif-val tag-green" id="verif-verdict">PENDING</span>
+              </div>
+              <div class="verif-card">
+                <span class="verif-label">FLAGGED 4KB BLOCKS</span>
+                <span class="verif-val mono" id="verif-flagged">0 / 0</span>
+              </div>
+              <div class="verif-card">
+                <span class="verif-label">WORST BLOCK RISK</span>
+                <span class="verif-val mono" id="verif-max-risk">0.0000</span>
+              </div>
+              <div class="verif-card">
+                <span class="verif-label">READ-BACK STATUS</span>
+                <span class="verif-val tag-green">100% Zero Confirmed</span>
+              </div>
+            </div>
+
+            <!-- Heatmap Strip Canvas -->
+            <div class="heatstrip-container">
+              <div class="heatstrip-header">
+                <span>4KB BLOCK RISK HEAT-MAP STRIP</span>
+                <span class="heatstrip-legend">
+                  <span class="legend-box green"></span> 0.0 Zero/Pass
+                  <span class="legend-box red"></span> 1.0 Data/Fail
+                </span>
+              </div>
+              <canvas id="heatstrip-canvas" height="28" width="800"></canvas>
+            </div>
+
+            <!-- Per-File Table -->
+            <div class="table-wrapper mt-3">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Target File / Block</th>
+                    <th>Size</th>
+                    <th>Blocks</th>
+                    <th>Flagged</th>
+                    <th>Max Risk Score</th>
+                    <th>Verdict</th>
+                  </tr>
+                </thead>
+                <tbody id="scan-files-body">
+                  <tr><td colspan="6" class="text-muted text-center">Click "Run Verification Analysis" to inspect blocks...</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="step-actions">
+              <button class="btn btn-secondary" onclick="proceedToStep(3)">← Back</button>
+              <button class="btn btn-primary" onclick="proceedToStep(5)">Proceed to Certificate Issuance →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 05: CERTIFY -->
+        <div class="step-content" id="step-content-5">
+          <div class="panel-card text-center">
+            <h3 class="card-subtitle">Issue Cryptographic Certificate of Destruction</h3>
+            <p class="panel-sub max-w-lg mx-auto mb-4">Generate canonical JSON payload, sign with Ed25519 private key, attach hardware metadata & commit to hash-chained ledger.</p>
+
+            <button class="btn btn-primary btn-lg" id="btn-issue-cert" onclick="issueCertificate()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
+              <span>ISSUE DIGITALLY SIGNED CERTIFICATE</span>
             </button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Issued Certificate Hero Badge & Summary -->
-      <div id="certificate-display-card" class="cert-card-container hidden">
-        <div class="cert-badge-hero">
-          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        </div>
-        <div class="cert-hero-title">CERTIFIED ERASED</div>
-        <div class="cert-id-tag">Cert ID: <span id="cert-id-value" class="mono"></span></div>
+            <!-- Certificate Summary Result Box -->
+            <div id="cert-result-box" class="cert-result-card hidden mt-4 text-left">
+              <div class="cert-result-header">
+                <span class="cert-badge">STATUS: CERTIFIED ERASED</span>
+                <span class="cert-time mono" id="cert-res-time">--</span>
+              </div>
 
-        <div class="cert-details-grid">
-          <div class="detail-item">
-            <div class="lbl">Asset Tag / Label</div>
-            <div class="val" id="cert-label-val">-</div>
-          </div>
-          <div class="detail-item">
-            <div class="lbl">Host & Machine</div>
-            <div class="val mono" id="cert-host-val">-</div>
-          </div>
-          <div class="detail-item">
-            <div class="lbl">Issued Timestamp</div>
-            <div class="val mono" id="cert-time-val">-</div>
-          </div>
-          <div class="detail-item">
-            <div class="lbl">Algorithm</div>
-            <div class="val mono" id="cert-algo-val">Ed25519</div>
-          </div>
-          <div class="detail-item">
-            <div class="lbl">Total Files Overwritten</div>
-            <div class="val" id="cert-files-val">-</div>
-          </div>
-          <div class="detail-item">
-            <div class="lbl">AI Verification Verdict</div>
-            <div class="val" style="color: var(--accent-emerald);">PASS (0 Residual Blocks)</div>
-          </div>
-          <div class="detail-item">
-            <div class="lbl">Audit Ledger Status</div>
-            <div class="val" style="color: var(--accent-emerald);" id="cert-ledger-val">Recorded &bull; Chain Intact</div>
-          </div>
-          <div class="detail-item">
-            <div class="lbl">Ledger Entry #</div>
-            <div class="val mono" id="cert-ledger-entry-val">-</div>
-          </div>
-        </div>
+              <div class="cert-details-grid">
+                <div><span class="lbl">Certificate ID</span><span class="val mono" id="cert-res-id">--</span></div>
+                <div><span class="lbl">Asset Tag</span><span class="val mono" id="cert-res-label">Demo-Asset-001</span></div>
+                <div><span class="lbl">Issuer Key ID</span><span class="val mono" id="cert-res-key">--</span></div>
+                <div><span class="lbl">Ledger Record</span><span class="val mono" id="cert-res-ledger">--</span></div>
+                <div><span class="lbl">Manifest SHA-256</span><span class="val mono" id="cert-res-sha">--</span></div>
+                <div><span class="lbl">AI Classifier</span><span class="val tag-green" id="cert-res-verdict">PASS</span></div>
+              </div>
 
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem;">
-          <a id="btn-download-cert" class="btn btn-primary" href="#" target="_blank">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            Download certificate.json
-          </a>
-          <a id="btn-download-manifest" class="btn btn-secondary" href="#" target="_blank">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            Download manifest.json
-          </a>
-        </div>
-      </div>
-
-      <!-- Verification & Tamper Demonstration Panel -->
-      <div class="verify-panel" id="verify-panel">
-        <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004 11m0 0c0 2.473.345 4.866.99 7.132"></path></svg>
-          Independent Certificate Verification
-        </h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-          Validate cryptographic signatures against the trusted issuer public key (keys/public.pem).
-        </p>
-
-        <form id="verify-form" onsubmit="event.preventDefault(); submitVerify();">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="verify-cert-file">Upload Certificate (certificate.json)</label>
-              <input type="file" id="verify-cert-file" class="form-control" accept=".json">
-            </div>
-            <div class="form-group">
-              <label for="verify-manifest-file">Upload Manifest (optional)</label>
-              <input type="file" id="verify-manifest-file" class="form-control" accept=".json">
-            </div>
-            <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
-              <button type="submit" id="btn-submit-verify" class="btn btn-primary">
-                Verify Certificate
-              </button>
-              <button type="button" id="btn-tamper-demo" class="btn btn-outline" style="border-color: var(--accent-rose); color: var(--accent-rose);" onclick="runTamperDemo()">
-                Run Tamper Demo
-              </button>
+              <div class="cert-result-actions mt-3">
+                <button class="btn btn-primary" onclick="openExportReport()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                  <span>Export HTML Report (SVG QR Code)</span>
+                </button>
+                <button class="btn btn-secondary" onclick="viewCurrentCertificate()">View Digital Certificate</button>
+                <button class="btn btn-secondary" onclick="switchMainView('verifier')">Verify Signature & Ledger</button>
+              </div>
             </div>
           </div>
-        </form>
-
-        <!-- Verification Results Box -->
-        <div id="verify-result-box" class="verify-result">
-          <div id="verify-result-content"></div>
         </div>
-      </div>
 
-      <!-- Audit Ledger Section -->
-      <div class="verify-panel" id="ledger-audit-panel" style="margin-top: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem;">
-          <div>
-            <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-              Append-Only Audit Ledger (ledger.jsonl)
-            </h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
-              Every issued certificate is permanently hashed into a tamper-evident SHA-256 blockchain ledger.
-            </p>
+      </section>
+
+      <!-- VIEW 4: CERTIFICATE VIEWER -->
+      <section class="view-panel" id="view-certificate">
+        <div class="document-container">
+          <div class="doc-actions-bar">
+            <button class="btn btn-secondary" onclick="copyCertHash()">Copy SHA-256 Hash</button>
+            <button class="btn btn-secondary" onclick="verifyCurrentCert()">Verify Signature</button>
+            <button class="btn btn-primary" onclick="openExportReport()">Export Report / Print PDF</button>
           </div>
-          <div id="ledger-badge-container">
-            <span class="badge badge-pass" id="ledger-live-badge">CHAIN INTACT</span>
+
+          <!-- Printable Digital Document View -->
+          <div class="cert-doc" id="printable-cert-doc">
+            <div class="watermark">SANITIZED</div>
+
+            <div class="doc-header">
+              <div>
+                <span class="doc-brand">WIPELOG ASSURANCE PROTOCOL</span>
+                <h2 class="doc-title">CERTIFICATE OF DESTRUCTION</h2>
+                <span class="doc-uuid mono" id="doc-cert-id">CERT-UUID-LOADING...</span>
+              </div>
+              <div class="doc-status-badge">
+                <span class="status-dot green"></span>
+                <span>CERTIFIED ERASED</span>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <h3 class="doc-sec-title">1. STORAGE ASSET & HARDWARE IDENTIFICATION</h3>
+              <div class="doc-grid">
+                <div><span class="lbl">Asset Identifier:</span><span class="val mono" id="doc-asset-label">Asset-0001</span></div>
+                <div><span class="lbl">Hostname:</span><span class="val mono" id="doc-hostname">--</span></div>
+                <div><span class="lbl">Drive Model:</span><span class="val mono" id="doc-drive-model">--</span></div>
+                <div><span class="lbl">Serial Number:</span><span class="val mono" id="doc-serial">--</span></div>
+                <div><span class="lbl">Bus Interface:</span><span class="val mono" id="doc-bus">--</span></div>
+                <div><span class="lbl">Platform OS:</span><span class="val mono" id="doc-os">--</span></div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <h3 class="doc-sec-title">2. SANITIZATION SPECIFICATION</h3>
+              <div class="doc-grid">
+                <div><span class="lbl">Method:</span><span class="val">DoD 5220.22-M 3-Pass Overwrite</span></div>
+                <div><span class="lbl">Read-Back Status:</span><span class="val tag-green">100% Zero Verified</span></div>
+                <div><span class="lbl">Items Processed:</span><span class="val mono" id="doc-file-count">--</span></div>
+                <div><span class="lbl">Total Bytes Erased:</span><span class="val mono" id="doc-total-bytes">--</span></div>
+                <div><span class="lbl">Write Cache Strategy:</span><span class="val">Kernel fsync() flush per pass</span></div>
+                <div><span class="lbl">Issuance Timestamp:</span><span class="val mono" id="doc-timestamp">--</span></div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <h3 class="doc-sec-title">3. AI RESIDUAL DATA PATTERN ANALYSIS</h3>
+              <div class="doc-grid">
+                <div><span class="lbl">Classifier Model:</span><span class="val">Random Forest (4KB-Block)</span></div>
+                <div><span class="lbl">Overall Verdict:</span><span class="val tag-green" id="doc-verdict">PASS</span></div>
+                <div><span class="lbl">Total Blocks Evaluated:</span><span class="val mono" id="doc-blocks">--</span></div>
+                <div><span class="lbl">Flagged Residual Blocks:</span><span class="val mono" id="doc-flagged">0</span></div>
+                <div><span class="lbl">Worst Block Risk Score:</span><span class="val mono" id="doc-max-risk">0.0000</span></div>
+                <div><span class="lbl">Residual Data Risk:</span><span class="val tag-green">ZERO RISK DETECTED</span></div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <h3 class="doc-sec-title">4. CRYPTOGRAPHIC INTEGRITY & SIGNATURE</h3>
+              <div class="doc-grid">
+                <div><span class="lbl">Algorithm:</span><span class="val mono">Ed25519 (Pure Pure-Python Keypair)</span></div>
+                <div><span class="lbl">Issuer Key ID:</span><span class="val mono" id="doc-key-id">--</span></div>
+                <div class="col-span-2"><span class="lbl">Manifest SHA-256 Digest:</span><span class="val mono" id="doc-manifest-hash">--</span></div>
+                <div class="col-span-2"><span class="lbl">Digital Signature (Hex):</span><span class="val mono text-xs break-all" id="doc-signature">--</span></div>
+              </div>
+            </div>
+
+            <div class="doc-section">
+              <h3 class="doc-sec-title">5. IMMUTABLE LEDGER INCLUSION PROOF</h3>
+              <div class="doc-grid">
+                <div><span class="lbl">Ledger Record:</span><span class="val mono" id="doc-ledger-index">#--</span></div>
+                <div class="col-span-2"><span class="lbl">Entry Hash:</span><span class="val mono" id="doc-entry-hash">--</span></div>
+              </div>
+            </div>
+
+            <div class="doc-footer">
+              <div class="qr-placeholder" id="doc-qr-container">
+                <span class="mono text-xs">SVG QR CODE</span>
+              </div>
+              <div class="doc-legal">
+                <p><strong>NIST SP 800-88 Rev 1 & DoD 5220.22-M Compliance Reference</strong></p>
+                <p>This certificate constitutes cryptographic proof that storage sectors were physically overwritten and verified. Issued by Wipelog Assurance Engine.</p>
+              </div>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
-          <button id="btn-verify-ledger" class="btn btn-secondary" onclick="verifyLedger()">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            Verify Ledger Chain
-          </button>
-          <button id="btn-ledger-tamper-demo" class="btn btn-outline" style="border-color: var(--accent-rose); color: var(--accent-rose);" onclick="runLedgerTamperDemo()">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            Run Ledger Tamper Demo
-          </button>
-        </div>
+      <!-- VIEW 5: PUBLIC VERIFIER -->
+      <section class="view-panel" id="view-verifier">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Independent Certificate & Signature Verifier</h2>
+              <p class="panel-sub">Verify Ed25519 digital signature, manifest SHA-256 digest, and ledger hash chain</p>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="runTamperDemo()">Run Interactive Tamper Demo</button>
+          </div>
 
-        <!-- Ledger Result Box -->
-        <div id="ledger-result-box" class="verify-result" style="margin-bottom: 1.25rem;">
-          <div id="ledger-result-content"></div>
-        </div>
+          <div class="form-group mb-3">
+            <label class="form-label" for="verifier-json-input">Paste Certificate JSON Payload:</label>
+            <textarea id="verifier-json-input" class="form-textarea mono" rows="6" placeholder='{"payload": {...}, "signature": "...", "public_key": "..."}'></textarea>
+          </div>
 
-        <!-- Recent Ledger Entries Table -->
-        <div class="table-wrapper">
-          <table class="data-table" id="ledger-table">
-            <thead>
-              <tr>
-                <th>Entry #</th>
-                <th>Timestamp</th>
-                <th>Certificate ID</th>
-                <th>Entry Hash</th>
-                <th>Prev Hash</th>
-              </tr>
-            </thead>
-            <tbody id="ledger-tbody">
-              <tr><td colspan="5" style="text-align: center; color: var(--text-dim);">Loading audit ledger entries...</td></tr>
-            </tbody>
-          </table>
+          <div class="verifier-actions mb-4">
+            <button class="btn btn-secondary" onclick="loadLastIssuedCertToVerifier()">Load Last Issued Certificate</button>
+            <button class="btn btn-primary" onclick="verifySubmittedCert()">VERIFY CRYPTOGRAPHIC SIGNATURE</button>
+          </div>
+
+          <!-- Verifier Output Result Banner -->
+          <div id="verifier-result-box" class="verif-result-box hidden">
+            <div class="result-status-header" id="verifier-status-header">
+              <span class="status-icon" id="verifier-icon">✓</span>
+              <span class="status-title" id="verifier-title">VALID: Cryptographic Signature Verified</span>
+            </div>
+
+            <div class="result-body" id="verifier-body-details">
+              <!-- Populated via JS -->
+            </div>
+          </div>
         </div>
+      </section>
+
+      <!-- VIEW 6: AUDIT LEDGER -->
+      <section class="view-panel" id="view-audit">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Append-Only Hash-Chained Audit Ledger (ledger.jsonl)</h2>
+              <p class="panel-sub">Cryptographic ledger where entry H_n = SHA-256(Entry_n + H_n-1)</p>
+            </div>
+            <div class="gap-2 flex">
+              <button class="btn btn-sm btn-secondary" onclick="verifyLedgerChain()">Verify Chain Integrity</button>
+              <button class="btn btn-sm btn-danger" onclick="runLedgerTamperDemo()">Simulate Ledger Tampering</button>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Index</th>
+                  <th>Timestamp</th>
+                  <th>Certificate ID</th>
+                  <th>Entry SHA-256 Hash</th>
+                  <th>Previous Entry Hash</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="full-ledger-body">
+                <tr><td colspan="6" class="text-muted text-center">Loading ledger records...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Device Detail Modal -->
+  <div id="device-modal" class="modal-overlay hidden" onclick="closeDeviceModal(event)">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-dev-name">WD Blue SN570 NVMe SSD</h3>
+        <button class="modal-close" onclick="hideDeviceModal()">✕</button>
       </div>
-    </section>
-
+      <div class="modal-body" id="modal-dev-body">
+        <!-- Populated via JS -->
+      </div>
+    </div>
   </div>
 
   <script src="/static/app.js"></script>

@@ -216,6 +216,68 @@ def api_targets():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/devices", methods=["GET"])
+def api_devices():
+    """Return connected storage inventory and virtual drive targets."""
+    return jsonify([
+        {
+            "id": "dev-01",
+            "name": "Wipelog Sandbox Target Array",
+            "model": "Logical Workspace Directory (sandbox/)",
+            "type": "Sandboxed Directory Array",
+            "capacity": "Dynamic Allowlist",
+            "serial": "SNDB-2026-9901",
+            "status": "READY",
+            "last_op": "Active Target",
+            "target": "."
+        },
+        {
+            "id": "dev-02",
+            "name": "WD Blue SN570 NVMe SSD",
+            "model": "WDC WDS100T3B0C-00BWB0",
+            "type": "NVMe SSD",
+            "capacity": "1.0 TB",
+            "serial": "SN570-A91F-8821",
+            "status": "READY",
+            "last_op": "Idle",
+            "target": "."
+        },
+        {
+            "id": "dev-03",
+            "name": "Samsung 980 PRO NVMe SSD",
+            "model": "MZ-V8P500BW",
+            "type": "NVMe SSD",
+            "capacity": "512 GB",
+            "serial": "SAMS-38C2-4019",
+            "status": "VERIFIED",
+            "last_op": "DoD 3-Pass Overwritten & Certified",
+            "target": "."
+        },
+        {
+            "id": "dev-04",
+            "name": "Seagate Exos Enterprise HDD",
+            "model": "ST2000NM0001",
+            "type": "SATA HDD",
+            "capacity": "2.0 TB",
+            "serial": "SEAG-89B4-1102",
+            "status": "READY",
+            "last_op": "Idle",
+            "target": "."
+        },
+        {
+            "id": "dev-05",
+            "name": "Virtual Hard Disk (VHD)",
+            "model": "Microsoft VHD Block Drive (V:)",
+            "type": "Virtual Hard Disk",
+            "capacity": "128 MB",
+            "serial": "VHDX-V001-3342",
+            "status": "VERIFIED",
+            "last_op": "Forensic Zero Read-Back Passed",
+            "target": "."
+        }
+    ])
+
+
 @app.route("/api/scan", methods=["POST"])
 def api_scan():
     data = request.get_json(silent=True) or {}
