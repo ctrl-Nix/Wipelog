@@ -7,14 +7,14 @@ This document outlines the three planned enhancements to elevate **Wipelog** int
 ## 1. Unified Single CLI (`python wipelog.py`)
 Consolidate all separate Python utilities (`wipe.py`, `volwipe.py`, `devwipe.py`, `certificate.py`, `verify_cert.py`, `ledger.py`, and `web/app.py`) into a single, cohesive command-line tool with intuitive subcommands:
 
-- [ ] **`wipelog wipe <target>`**: Multi-pass file/directory overwrite with safety guards, zero read-back, and manifest generation (`--dry-run`, `--delete`, `--yes`, `--out`).
-- [ ] **`wipelog volume <drive>`**: Windows volume & unallocated free-space sanitization (`--allow-fixed`, `--yes`).
-- [ ] **`wipelog image <file>`**: Raw disk-image / block device sanitization with full zero read-back.
-- [ ] **`wipelog scan <target>`**: Pre-wipe or post-wipe 4KB-block AI residual risk inspection.
-- [ ] **`wipelog certify`**: Generate canonical JSON, sign with Ed25519, attach device metadata, and commit to hash-chained ledger (`--manifest`, `--label`, `--out`).
-- [ ] **`wipelog verify <cert>`**: Independently verify cryptographic signature, manifest hash matching, and ledger chain integrity (`--manifest`, `--ledger`).
-- [ ] **`wipelog audit`**: View full immutable ledger history or verify hash-chain validity (`show`, `verify`).
-- [ ] **`wipelog serve`**: Launch the local offline web auditor dashboard on `http://127.0.0.1:5000`.
+- [x] **`wipelog wipe <target>`**: Multi-pass file/directory overwrite with safety guards, zero read-back, and manifest generation (`--dry-run`, `--delete`, `--yes`, `--out`).
+- [x] **`wipelog volume <drive>`**: Windows volume & unallocated free-space sanitization (`--allow-fixed`, `--yes`).
+- [x] **`wipelog image <file>`**: Raw disk-image / block device sanitization with full zero read-back.
+- [x] **`wipelog scan <target>`**: Pre-wipe or post-wipe 4KB-block AI residual risk inspection.
+- [x] **`wipelog certify`**: Generate canonical JSON, sign with Ed25519, attach device metadata, and commit to hash-chained ledger (`--manifest`, `--label`, `--out`).
+- [x] **`wipelog verify <cert>`**: Independently verify cryptographic signature, manifest hash matching, and ledger chain integrity (`--manifest`, `--ledger`).
+- [x] **`wipelog audit`**: View full immutable ledger history or verify hash-chain validity (`show`, `verify`).
+- [x] **`wipelog serve`**: Launch the local offline web auditor dashboard on `http://127.0.0.1:5000`.
 
 ---
 
