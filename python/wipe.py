@@ -10,10 +10,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from features import analyze  
+from classifier import scan_file
 
 ROOT = Path(__file__).resolve().parent.parent
 CHUNK = 64 * 1024
-PASSES = ["zero", "ones", "random"]
+PASSES = ["random", "ones", "zero"]   # last pass = zeros, then verified by read-back
 
 # System folders: never wipe
 PROTECTED = [Path(p).resolve() for p in filter(None, [
@@ -89,6 +90,14 @@ def overwrite(path: Path):
             os.fsync(f.fileno())
 
 
+def readback_zero(path: Path) -> bool:
+    with open(path, "rb") as f:
+        while chunk := f.read(CHUNK):
+            if chunk.count(0) != len(chunk):
+                return False
+    return True
+
+
 def create_samples():
     d = ROOT / "sandbox"
     d.mkdir(exist_ok=True)
@@ -96,6 +105,69 @@ def create_samples():
     (d / "records.csv").write_bytes(("id,name,email\n" + "".join(f"{i},User{i},user{i}@example.com\n" for i in range(800))).encode())
     (d / "config.json").write_bytes(json.dumps({"token": "DEMO-NOT-A-SECRET", "items": list(range(500))}).encode())
     print(f"Created sample files in {d}")
+
+
+def run_wipe(target: Path, delete: bool = False, progress=None) -> dict:
+    rt = check_target(target)
+    files = collect(rt)
+    if not files:
+        raise ValueError("Nothing to wipe.")
+    total = sum(f.stat().st_size for f in files)
+    started = time.time()
+    entries = []
+    total_files = len(files)
+
+    for idx, f in enumerate(files):
+        size = f.stat().st_size
+        before = sha256_file(f)
+
+        if callable(progress):
+            progress({"file": f.name, "index": idx, "total": total_files, "phase": "scan_before"})
+        scan_before = scan_file(f)
+
+        if callable(progress):
+            progress({"file": f.name, "index": idx, "total": total_files, "phase": "overwrite"})
+        overwrite(f)
+
+        after = sha256_file(f)
+        if not readback_zero(f):
+            raise SystemExit(f"Read-back verification failed (file not all zeros): {f}")
+
+        if callable(progress):
+            progress({"file": f.name, "index": idx, "total": total_files, "phase": "scan_after"})
+        feats = analyze(f)  # must run before delete
+        scan = scan_file(f)  # per-4KB-block AI verification, before delete
+        if scan["verdict"] == "FAIL":
+            print(f"  WARNING: {scan['flagged_blocks']} suspicious blocks in {f.name}")
+
+        entries.append({
+            "name": f.name,
+            "size": size,
+            "sha256_before": before,
+            "sha256_after": after,
+            "features": feats,
+            "block_scan_before": scan_before,
+            "block_scan": scan,
+            "readback_zero": True,
+        })
+        if delete:
+            tmp = f.with_name(secrets.token_hex(8))
+            f.rename(tmp)
+            tmp.unlink()
+        print("wiped:", f.name)
+
+    manifest = {
+        "method": "FILE_OVERWRITE",
+        "passes": PASSES,
+        "deleted_after": delete,
+        "target_name": rt.name,
+        "files": entries,
+        "file_count": len(entries),
+        "bytes": total,
+        "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(started)),
+        "completed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+    return manifest
 
 
 def main():
@@ -131,38 +203,10 @@ def main():
     if not a.yes and input("This is irreversible. Type WIPE to continue: ").strip() != "WIPE":
         raise SystemExit("Cancelled.")
 
-    started = time.time()
-    entries = []
-    for f in files:
-        size = f.stat().st_size
-        before = sha256_file(f)
-        overwrite(f)
-        after = sha256_file(f)
-        if size > 0 and before == after:
-            raise SystemExit(f"Overwrite did not change content: {f}")
-        feats = analyze(f)  # must run before delete
-        entries.append({
-            "name": f.name, "size": size,
-            "sha256_before": before, "sha256_after": after,
-            "features": feats,
-        })
-        if a.delete:
-            tmp = f.with_name(secrets.token_hex(8))
-            f.rename(tmp)
-            tmp.unlink()
-        print("wiped:", f.name)
-
-    manifest = {
-        "method": "FILE_OVERWRITE",
-        "passes": PASSES,
-        "deleted_after": a.delete,
-        "target_name": rt.name,
-        "files": entries,
-        "file_count": len(entries),
-        "bytes": total,
-        "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(started)),
-        "completed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-    }
+    try:
+        manifest = run_wipe(rt, delete=a.delete)
+    except Exception as e:
+        raise SystemExit(str(e))
     Path(a.out).write_text(json.dumps(manifest, indent=2))
     print(f"Done. Manifest: {a.out}")
 

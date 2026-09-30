@@ -43,3 +43,11 @@ next-env.d.ts
 sandbox/
 __pycache__/
 *.pyc
+.pytest_cache/
+keys/private.pem
+outputs/
+manifest*.json
+certificate*.json
+tampered.json
+*.joblib
+

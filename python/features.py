@@ -48,3 +48,19 @@ def analyze(path: Path) -> dict:
 
 def analyze_bytes(data: bytes) -> dict:
     return _analyze_stream(io.BytesIO(data))
+
+def iter_blocks(path, block=4096, min_tail=1024):
+    """Yield 4 KB blocks; a tiny final tail is merged into the previous block."""
+    with open(path, "rb") as f:
+        cur = f.read(block)
+        while cur:
+            nxt = f.read(block)
+            if 0 < len(nxt) < min_tail:      # short read = EOF
+                cur += nxt
+                nxt = b""
+            yield cur
+            cur = nxt
+
+
+def analyze_blocks(path, block=4096):
+    return [analyze_bytes(b) for b in iter_blocks(path, block)]

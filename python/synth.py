@@ -62,10 +62,16 @@ def residual_sample(n):
     return wiped + data[cut:] if rng.random() < 0.5 else data[:n - cut] + wiped
 
 
-def make_dataset(per_class=1500):
+def make_block_dataset(per_class=6000):
+    """Per-block training data. Most blocks are 4096 bytes; some are shorter (file tails)."""
     X, y = [], []
-    for label, gen in ((0, clean_sample), (1, residual_sample)):
+    for label, gen in ((0, clean_sample), (1, residual_blob)):
         for _ in range(per_class):
-            f = analyze_bytes(gen(rng.randint(4096, 200_000)))
+            n = 4096 if rng.random() < 0.8 else rng.randint(1024, 4096)
+            f = analyze_bytes(gen(n))
             X.append([f[k] for k in FEATURES]); y.append(label)
     return np.array(X), np.array(y)
+
+
+def residual_blob(n):
+    return rng.choice(ORIGINALS)(n)
