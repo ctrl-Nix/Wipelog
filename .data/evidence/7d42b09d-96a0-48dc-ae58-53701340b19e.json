@@ -1,0 +1,15 @@
+{
+  "asset_serial": "DEMO-SN-999",
+  "asset_tag": "DEMO-LAPTOP-77",
+  "method": "SIMULATED_ERASE",
+  "tool_name": "RecycleProof Demo Simulator",
+  "tool_version": "0.1.0",
+  "started_at": "2026-09-30T08:14:27.518Z",
+  "completed_at": "2026-09-30T08:18:39.518Z",
+  "result": "success",
+  "verification": {
+    "performed": true,
+    "result": "passed"
+  },
+  "demo": true
+}
