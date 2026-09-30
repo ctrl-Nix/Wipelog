@@ -4,6 +4,8 @@ import { getRun } from "@/lib/service";
 import { AppError } from "@/lib/errors";
 import { StatusBadge, CheckBadge } from "@/components/StatusBadge";
 import IssueButton from "@/components/IssueButton";
+import ExplainPanel from "@/components/ExplainPanel";
+import { aiEnabled, templateExplanation } from "@/lib/explain";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +52,13 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="rounded-lg border bg-white p-4 text-sm">
+        <h2 className="mb-1 font-semibold">Explanation</h2>
+        <p>{templateExplanation(run)}</p>
+        <p className="mt-1 text-xs text-slate-500">Generated from the rule results. Rules determine status.</p>
+        {aiEnabled() && <ExplainPanel runId={run.id} />}
       </section>
 
       <section className="rounded-lg border bg-white p-4 text-sm">

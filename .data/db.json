@@ -1,6 +1,16 @@
 {
   "assets": [
     {
+      "id": "e18562f6-823a-4ae8-ac16-1c49b8674bc4",
+      "asset_tag": "DEMO-LAPTOP-4593",
+      "manufacturer": "Dell",
+      "model": "Latitude",
+      "serial_number": "DEMO-SN-001",
+      "storage_type": "SSD",
+      "status": "needs review",
+      "created_at": "2026-09-30T09:24:18.727Z"
+    },
+    {
       "id": "87eb347d-1db0-4cef-83c0-6c299c38bb42",
       "asset_tag": "DEMO-LAPTOP-77",
       "manufacturer": "Dell",
@@ -32,6 +42,232 @@
     }
   ],
   "runs": [
+    {
+      "id": "c74922df-5bef-4fe7-8ca6-0001b104288e",
+      "asset_id": "e18562f6-823a-4ae8-ac16-1c49b8674bc4",
+      "method": "unknown",
+      "tool_name": "unknown",
+      "tool_version": "unknown",
+      "started_at": null,
+      "completed_at": null,
+      "claimed_result": "unknown",
+      "verification_status": "Needs Review",
+      "checks": [
+        {
+          "key": "parse",
+          "label": "Evidence file readable",
+          "status": "review",
+          "message": "Evidence is not valid JSON.",
+          "hint": "Upload a valid JSON evidence file under 100 KB."
+        }
+      ],
+      "evidence_path": "evidence\\c74922df-5bef-4fe7-8ca6-0001b104288e.json",
+      "evidence_sha256": "b403c084980485b52b7bae460640b08085bfacef5bd37ce69dbe634b2dfe7434",
+      "verifier_version": "rules-1.0.0",
+      "simulated": false,
+      "created_at": "2026-09-30T09:24:26.239Z"
+    },
+    {
+      "id": "b1454bd2-1291-4d88-b923-dd6324940a14",
+      "asset_id": "e18562f6-823a-4ae8-ac16-1c49b8674bc4",
+      "method": "SIMULATED_ERASE",
+      "tool_name": "RecycleProof Demo Simulator",
+      "tool_version": "0.1.0",
+      "started_at": "2026-09-30T09:20:14.119Z",
+      "completed_at": "2026-09-30T09:24:26.119Z",
+      "claimed_result": "success",
+      "verification_status": "Needs Review",
+      "checks": [
+        {
+          "key": "asset_exists",
+          "label": "Asset exists",
+          "status": "pass",
+          "message": "Linked to asset DEMO-LAPTOP-4593."
+        },
+        {
+          "key": "identity",
+          "label": "Device identity match",
+          "status": "pass",
+          "message": "Exact match on serial + asset tag."
+        },
+        {
+          "key": "metadata",
+          "label": "Required metadata present",
+          "status": "review",
+          "message": "Missing: verification.",
+          "hint": "Attach complete tool output."
+        },
+        {
+          "key": "timeline",
+          "label": "Timeline sanity",
+          "status": "pass",
+          "message": "Timestamps valid and correctly ordered."
+        },
+        {
+          "key": "outcome",
+          "label": "Run outcome",
+          "status": "pass",
+          "message": "Tool reported explicit success."
+        },
+        {
+          "key": "verification",
+          "label": "Verification evidence",
+          "status": "review",
+          "message": "Method-appropriate verification evidence is missing.",
+          "hint": "Attach the tool's verification output."
+        },
+        {
+          "key": "integrity",
+          "label": "Evidence integrity (SHA-256)",
+          "status": "pass",
+          "message": "Digest computed server-side: 192ecbb4ba28…"
+        },
+        {
+          "key": "provenance",
+          "label": "Demo provenance",
+          "status": "pass",
+          "message": "SIMULATED — NOT A REAL WIPE."
+        }
+      ],
+      "evidence_path": "evidence\\b1454bd2-1291-4d88-b923-dd6324940a14.json",
+      "evidence_sha256": "192ecbb4ba282ba5af43421681f2a90ff78f82a45fc5c3d34686e2e257c73730",
+      "verifier_version": "rules-1.0.0",
+      "simulated": true,
+      "created_at": "2026-09-30T09:24:26.136Z"
+    },
+    {
+      "id": "7b77aa6a-8bcb-4ab9-a464-b7769039b886",
+      "asset_id": "e18562f6-823a-4ae8-ac16-1c49b8674bc4",
+      "method": "SIMULATED_ERASE",
+      "tool_name": "RecycleProof Demo Simulator",
+      "tool_version": "0.1.0",
+      "started_at": "2026-09-30T09:20:13.906Z",
+      "completed_at": "2026-09-30T09:24:25.906Z",
+      "claimed_result": "success",
+      "verification_status": "Fail",
+      "checks": [
+        {
+          "key": "asset_exists",
+          "label": "Asset exists",
+          "status": "pass",
+          "message": "Linked to asset DEMO-LAPTOP-4593."
+        },
+        {
+          "key": "identity",
+          "label": "Device identity match",
+          "status": "fail",
+          "message": "Evidence device identifier does not match registered asset.",
+          "hint": "Confirm the evidence belongs to this device."
+        },
+        {
+          "key": "metadata",
+          "label": "Required metadata present",
+          "status": "pass",
+          "message": "All required fields are present."
+        },
+        {
+          "key": "timeline",
+          "label": "Timeline sanity",
+          "status": "pass",
+          "message": "Timestamps valid and correctly ordered."
+        },
+        {
+          "key": "outcome",
+          "label": "Run outcome",
+          "status": "pass",
+          "message": "Tool reported explicit success."
+        },
+        {
+          "key": "verification",
+          "label": "Verification evidence",
+          "status": "pass",
+          "message": "Method-appropriate verification reported as passed."
+        },
+        {
+          "key": "integrity",
+          "label": "Evidence integrity (SHA-256)",
+          "status": "pass",
+          "message": "Digest computed server-side: 418121233be4…"
+        },
+        {
+          "key": "provenance",
+          "label": "Demo provenance",
+          "status": "pass",
+          "message": "SIMULATED — NOT A REAL WIPE."
+        }
+      ],
+      "evidence_path": "evidence\\7b77aa6a-8bcb-4ab9-a464-b7769039b886.json",
+      "evidence_sha256": "418121233be4701b32dfdc84cf8e0c3e1363177435effa315157a6474181ee6a",
+      "verifier_version": "rules-1.0.0",
+      "simulated": true,
+      "created_at": "2026-09-30T09:24:25.923Z"
+    },
+    {
+      "id": "f0c16279-01c2-4587-b6e8-fc5356195e07",
+      "asset_id": "e18562f6-823a-4ae8-ac16-1c49b8674bc4",
+      "method": "SIMULATED_ERASE",
+      "tool_name": "RecycleProof Demo Simulator",
+      "tool_version": "0.1.0",
+      "started_at": "2026-09-30T09:20:07.491Z",
+      "completed_at": "2026-09-30T09:24:19.491Z",
+      "claimed_result": "success",
+      "verification_status": "Pass",
+      "checks": [
+        {
+          "key": "asset_exists",
+          "label": "Asset exists",
+          "status": "pass",
+          "message": "Linked to asset DEMO-LAPTOP-4593."
+        },
+        {
+          "key": "identity",
+          "label": "Device identity match",
+          "status": "pass",
+          "message": "Exact match on serial + asset tag."
+        },
+        {
+          "key": "metadata",
+          "label": "Required metadata present",
+          "status": "pass",
+          "message": "All required fields are present."
+        },
+        {
+          "key": "timeline",
+          "label": "Timeline sanity",
+          "status": "pass",
+          "message": "Timestamps valid and correctly ordered."
+        },
+        {
+          "key": "outcome",
+          "label": "Run outcome",
+          "status": "pass",
+          "message": "Tool reported explicit success."
+        },
+        {
+          "key": "verification",
+          "label": "Verification evidence",
+          "status": "pass",
+          "message": "Method-appropriate verification reported as passed."
+        },
+        {
+          "key": "integrity",
+          "label": "Evidence integrity (SHA-256)",
+          "status": "pass",
+          "message": "Digest computed server-side: 169d69c4b1f6…"
+        },
+        {
+          "key": "provenance",
+          "label": "Demo provenance",
+          "status": "pass",
+          "message": "SIMULATED — NOT A REAL WIPE."
+        }
+      ],
+      "evidence_path": "evidence\\f0c16279-01c2-4587-b6e8-fc5356195e07.json",
+      "evidence_sha256": "169d69c4b1f6e00243ae94d6acb44776f86de40280fbff68ef4cdf0254d799d4",
+      "verifier_version": "rules-1.0.0",
+      "simulated": true,
+      "created_at": "2026-09-30T09:24:19.541Z"
+    },
     {
       "id": "7ca65acd-b33e-4ce0-a2a3-5c6f0707ba40",
       "asset_id": "87eb347d-1db0-4cef-83c0-6c299c38bb42",
@@ -819,6 +1055,28 @@
     }
   ],
   "certificates": [
+    {
+      "id": "fcb3622d-b548-4ca7-9564-8eda09cfe396",
+      "certificate_code": "RP-23C99-D643E-AAA1A-D55CB",
+      "wipe_run_id": "f0c16279-01c2-4587-b6e8-fc5356195e07",
+      "asset_snapshot": {
+        "asset_tag": "DEMO-LAPTOP-4593",
+        "serial_masked": "*******-001",
+        "manufacturer": "Dell",
+        "model": "Latitude",
+        "storage_type": "SSD",
+        "method": "SIMULATED_ERASE",
+        "tool_name": "RecycleProof Demo Simulator",
+        "tool_version": "0.1.0",
+        "completed_at": "2026-09-30T09:24:19.491Z",
+        "result": "Pass",
+        "verifier_version": "rules-1.0.0",
+        "simulated": true
+      },
+      "evidence_sha256": "169d69c4b1f6e00243ae94d6acb44776f86de40280fbff68ef4cdf0254d799d4",
+      "issued_at": "2026-09-30T09:24:22.632Z",
+      "demo_label": true
+    },
     {
       "id": "f55ff2d7-7c95-475a-b199-ce8b99a6d8c1",
       "certificate_code": "RP-11A77-4E390-2C655-4785C",

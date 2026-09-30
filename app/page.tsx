@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listAssets } from "@/lib/service";
+import AssetTable from "@/components/AssetTable";
 
 export const dynamic = "force-dynamic";
 
@@ -26,26 +27,7 @@ export default async function Dashboard() {
           No assets yet. Click <b>Add asset</b>, then create a demo wipe run from the asset page.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-100 text-slate-600">
-              <tr>
-                <th className="p-3">Asset tag</th><th className="p-3">Device</th>
-                <th className="p-3">Storage</th><th className="p-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assets.map((a) => (
-                <tr key={a.id} className="border-t">
-                  <td className="p-3"><Link className="font-medium text-blue-700 underline" href={`/assets/${a.id}`}>{a.asset_tag}</Link></td>
-                  <td className="p-3">{[a.manufacturer, a.model].filter(Boolean).join(" ") || "—"}</td>
-                  <td className="p-3">{a.storage_type}</td>
-                  <td className="p-3">{a.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AssetTable assets={assets} />
       )}
     </div>
   );
