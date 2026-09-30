@@ -50,6 +50,9 @@ def main():
     print("VALID: signature verified")
     print(f"  cert_id : {payload['cert_id']}")
     print(f"  device  : {payload['device']['label']} ({payload['device']['hostname']})")
+    d = payload.get("drive") or {}
+    if d:
+        print(f"  drive   : {d.get('model')}  serial={d.get('serial') or 'n/a'}  bus={d.get('bus') or 'n/a'}")
     print(f"  issued  : {payload['issued_at']}")
     print(f"  result  : {payload['result']}  files={payload['erasure']['file_count']}")
     print(f"  key_id  : {key_id(trusted_hex)}   (issuer fingerprint)")

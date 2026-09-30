@@ -1,0 +1,13 @@
+{
+  "method": "DEVICE_OVERWRITE",
+  "passes": [
+    "random",
+    "ones",
+    "zero"
+  ],
+  "target": "testdisk.img",
+  "size": 67108864,
+  "bytes_verified": 67108864,
+  "readback_zero": true,
+  "nonzero_bytes": 0
+}

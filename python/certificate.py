@@ -51,14 +51,19 @@ def build_payload(manifest_path: Path, label: str) -> dict:
         "issued_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "device": {"label": label, "hostname": socket.gethostname(),
                    "os": platform.platform(), "machine": platform.machine()},
-        "erasure": {k: m[k] for k in ("method", "passes", "deleted_after", "target_name",
-                                      "file_count", "bytes", "started_at", "completed_at")},
+        "erasure": {k: m[k] for k in (
+                        "method", "passes", "file_count", "bytes")
+                    if k in m} | {k: m[k] for k in (
+                        "deleted_after", "target_name", "started_at", "completed_at")
+                    if k in m},
         "ai_verification": {
             "model": "RandomForest, per-4KB-block residual-data classifier",
             "overall_verdict": "PASS",
             "flagged_blocks_total": sum(x["flagged_blocks"] for x in files),
             "worst_block_risk": max((x["max_risk"] for x in files), default=0.0),
         },
+        "drive": m.get("device", {}),
+        "free_space_verified_bytes": m.get("free_space_verified_bytes"),
         "files": files,
         "manifest_sha256": hashlib.sha256(raw).hexdigest(),
         "result": "CERTIFIED_ERASED",
