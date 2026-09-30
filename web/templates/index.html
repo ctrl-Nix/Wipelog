@@ -114,6 +114,51 @@
       <!-- VIEW 1: OVERVIEW / DASHBOARD -->
       <section class="view-panel active" id="view-overview">
         
+        <!-- Playful Cartoonish Hero Intro Card -->
+        <div class="cartoon-hero-card mb-4">
+          <div class="hero-header-row flex justify-between items-center">
+            <div>
+              <span class="cartoon-badge">PROVE DATA WAS ERASED</span>
+              <h2 class="cartoon-title">Secure Storage Erasure & Forensic Proof</h2>
+              <p class="cartoon-sub">DoD 3-pass hardware overwrite + 4KB block ML risk scanner + Ed25519 digital certificates</p>
+            </div>
+            <button class="btn btn-primary btn-lg cartoon-pop-btn" onclick="startNewErasureWorkflow()">
+              <span>START ERASE WORKFLOW ⚡</span>
+            </button>
+          </div>
+
+          <!-- Animated Cartoon Workflow Nodes -->
+          <div class="cartoon-flow-grid">
+            <div class="cartoon-flow-node node-1" onclick="startNewErasureWorkflow()">
+              <div class="node-icon-box">💾</div>
+              <div class="node-step">01. DEVICE</div>
+              <div class="node-title">Target Storage</div>
+              <div class="node-desc">NVMe, SATA or VHD</div>
+            </div>
+            <div class="cartoon-arrow">➔</div>
+            <div class="cartoon-flow-node node-2" onclick="startNewErasureWorkflow()">
+              <div class="node-icon-box">⚡</div>
+              <div class="node-step">02. OVERWRITE</div>
+              <div class="node-title">DoD 3-Pass + fsync</div>
+              <div class="node-desc">Random → 0xFF → 0x00</div>
+            </div>
+            <div class="cartoon-arrow">➔</div>
+            <div class="cartoon-flow-node node-3" onclick="startNewErasureWorkflow()">
+              <div class="node-icon-box">🧠</div>
+              <div class="node-step">03. AI SCAN</div>
+              <div class="node-title">4KB Block Scanner</div>
+              <div class="node-desc">Entropy & Chi-Sq Check</div>
+            </div>
+            <div class="cartoon-arrow">➔</div>
+            <div class="cartoon-flow-node node-4" onclick="startNewErasureWorkflow()">
+              <div class="node-icon-box">📜</div>
+              <div class="node-step">04. CERTIFY</div>
+              <div class="node-title">Signed Certificate</div>
+              <div class="node-desc">Ed25519 & SHA-256 Ledger</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Compact Summary Stats Grid -->
         <div class="metrics-grid">
           <div class="metric-card">
