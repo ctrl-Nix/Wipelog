@@ -51,6 +51,7 @@ certificate*.json
 tampered.json
 *.joblib
 ledger*.jsonl
+*report*.html
 *.vhd
 *.img
 .venv/

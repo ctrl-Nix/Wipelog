@@ -304,6 +304,25 @@ def cmd_serve(args):
     return 0
 
 
+def cmd_export(args):
+    """Generate official printable HTML Certificate of Destruction with embedded QR code."""
+    import webbrowser, json
+    from cert_report import generate_html_report
+
+    cert_file = Path(args.cert)
+    if not cert_file.exists():
+        print(f"\033[91mCertificate file not found: {cert_file}\033[0m")
+        return 1
+
+    data = json.loads(cert_file.read_text(encoding="utf-8"))
+    out_file = Path(args.out)
+    generate_html_report(data, out_file)
+    print(f"\033[92mCertificate of Destruction report generated: {out_file.resolve()}\033[0m")
+    if args.open:
+        webbrowser.open(out_file.as_uri())
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="wipelog",
@@ -317,6 +336,7 @@ Examples:
   python wipelog.py scan sandbox/
   python wipelog.py certify --manifest manifest.json --label "Asset-001"
   python wipelog.py verify certificate.json --manifest manifest.json --ledger
+  python wipelog.py export-cert certificate.json --out report.html --open
   python wipelog.py ledger show
   python wipelog.py serve
         """
@@ -374,6 +394,13 @@ Examples:
     p_led.add_argument("action", choices=["show", "verify"], default="show", nargs="?", help="Action to perform")
     p_led.add_argument("--path", default="ledger.jsonl", help="Ledger path (default: ledger.jsonl)")
     p_led.set_defaults(func=cmd_ledger)
+
+    # Subcommand: export-cert
+    p_exp = sub.add_parser("export-cert", help="Generate printable HTML/PDF Certificate of Destruction with QR code")
+    p_exp.add_argument("cert", nargs="?", default="certificate.json", help="Certificate JSON to render")
+    p_exp.add_argument("--out", default="certificate_report.html", help="Output HTML report file")
+    p_exp.add_argument("--open", action="store_true", help="Open report in browser after generating")
+    p_exp.set_defaults(func=cmd_export)
 
     # Subcommand: serve
     p_srv = sub.add_parser("serve", help="Launch the local offline auditor web dashboard")

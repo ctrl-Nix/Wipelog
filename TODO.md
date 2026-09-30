@@ -21,14 +21,16 @@ Consolidate all separate Python utilities (`wipe.py`, `volwipe.py`, `devwipe.py`
 ## 2. Exportable & Printable Certificate of Destruction (HTML / PDF)
 Provide compliance officers, recyclers, and auditors with an official, human-readable **Certificate of Destruction**:
 
-- [ ] **Self-Contained HTML/PDF Template**: Beautiful, printable single-file layout containing:
+- [x] **Self-Contained HTML/PDF Template** (`python/cert_report.py`): Printable single-file layout containing:
   - Official Certificate ID & Issuance Timestamp.
   - Sanitized Asset Details (Device Label, Hostname, Drive Model, Serial Number, Bus Type).
   - Sanitization Method & Passes (`DoD 5220.22-M` inspired, 100% Zero Read-Back Verified).
-  - 4KB Block AI Residual Analysis Summary (Verdict: PASS, 0 Flagged Blocks).
+  - 4KB Block AI Residual Analysis Summary (Verdict: PASS, Flagged Blocks, Worst Block Risk).
   - Cryptographic Verification Details (Ed25519 Signature, Issuer `key_id` Fingerprint, Manifest SHA-256 Digest).
-  - Embedded SVG/Canvas QR Code encoding verification link / digest for mobile scanning.
-- [ ] **CLI & Web Export Support**: Exportable via CLI (`python wipelog.py export-cert certificate.json --out cert.html`) and as a "Print / Save PDF" button on the Web UI.
+  - Embedded SVG QR Code (via `qrcode` library, no PIL/Pillow needed) encoding cert_id + asset + issuer fingerprint.
+  - Print/Save PDF button (browser native `window.print()`).
+  - SANITIZED watermark, CERTIFIED ERASED status badge.
+- [x] **CLI Export via `wipelog.py`**: `python wipelog.py export-cert certificate.json --out report.html --open`
 
 ---
 
