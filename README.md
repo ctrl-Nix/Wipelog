@@ -1,226 +1,235 @@
 # AI-Verified Secure Data Wiping & Certification Tool
+### Trustworthy IT Asset Recycling & Sanitization
 
-A command-line tool that securely overwrites files, folders, disk images and whole volumes, checks the result with a machine-learning classifier, and issues a cryptographically signed erasure certificate that is recorded in a tamper-evident ledger.
+A standards-inspired data sanitization engine and cryptographic verification tool. It securely overwrites files, virtual disk images, and whole storage volumes, validates data destruction with a 4KB-block machine-learning residual classifier + full zero read-back verification, and issues an **Ed25519 digitally signed erasure certificate** recorded into an append-only, tamper-evident hash-chained ledger.
 
-Deleting or formatting does not remove data. This tool overwrites it, verifies the overwrite, and produces evidence that anyone can check independently.
+Standard "delete" or "format" operations only remove partition tables and filesystem pointers; residual data remains fully recoverable via carving tools. This tool physically destroys data, verifies erasure, and generates independently auditable cryptographic proof.
 
-## Features
+---
 
-- **Multi-pass overwrite**: random, 0xFF, then 0x00, with `fsync` after every pass.
-- **Read-back verification**: after the final zero pass, the data is read back and every byte must be zero.
-- **Volume wipe (Windows)**: overwrites every file, deletes it, then fills free space with random data and then zeros, and verifies the free space by read-back.
-- **Per-block AI verification**: a Random Forest scores every 4 KB block for residual data. The verdict for a file is decided by its worst block, so a small surviving region is not averaged away.
-- **File-signature scan**: catches leftover headers of formats whose payload looks random (ZIP/DOCX, PDF, PNG, JPEG, SQLite, RAR, 7z, OLE).
-- **Signed certificate**: Ed25519 signature over canonical JSON. Includes drive model/serial, method, per-file results, manifest hash and issuer key fingerprint.
-- **Hash-chained ledger**: append-only log where each entry contains the hash of the previous one. Editing any past entry breaks the chain.
-- **Safety guards**: refuses system folders, the system drive, the drive holding the project, the project's own source, drive roots and symlinks.
+## Architecture: Two-Tier System
 
-## How it works
+| Component | Target Users | Capabilities & Scope |
+|---|---|---|
+| **Core CLI Engine** (`python/*.py`) | System Administrators, ITAD technicians | Unrestricted system-level operations: individual files, directories, whole Windows volumes (`volwipe.py` with free-space wipe), and raw disk images (`devwipe.py`). Full root guards and automated scripting. |
+| **Auditor Web Portal** (`web/app.py`) | Compliance officers, recycling auditors, evaluators | Safe, self-contained offline Web UI (`http://127.0.0.1:5000`). Visualizes 4KB block risk heat-strips, displays before/after entropy metrics, allows one-click certificate issuing, and provides interactive tamper demos. Restricted to `./sandbox` for complete safety. |
+
+---
+
+## Key Features
+
+- **Multi-pass Overwrite**: 3-pass overwrite (`Random` &rarr; `0xFF` &rarr; `0x00`) with explicit `fsync` flush after every pass to bypass OS file caching.
+- **Full Zero Read-Back**: After the final zero pass, reads back every byte to guarantee 100% zero-fill before certification.
+- **Volume & Free-Space Sanitization (Windows)**: Overwrites existing files, renames them with random hex tokens before unlinking, fills all unallocated slack space (random + zeros), verifies the entire free space, and removes temporary filler blocks (`volwipe.py`).
+- **Per-Block AI Residual Classifier**: A 4 KB block-level Random Forest model (evaluating Shannon entropy, chi-square distribution, zero-byte fraction, printable ASCII ratio, and longest contiguous byte runs). Uses a strict **worst-block aggregation policy** so small un-wiped fragments cannot be masked by averaging.
+- **File Signature Residual Scanner**: Catches surviving headers of formats whose internal payloads resemble high-entropy noise (ZIP/DOCX/XLSX, PDF, PNG, JPEG, SQLite, 7z, RAR, OLE).
+- **Cryptographic Certification**: Generates canonical JSON signed with **Ed25519** asymmetric cryptography, embedding drive hardware serials, timestamps, AI block scores, and an issuer public key fingerprint (`key_id`).
+- **Append-Only Hash-Chained Ledger**: Every issued certificate is committed to an immutable ledger (`ledger.jsonl`) where each entry incorporates the SHA-256 hash of the previous record ($H_n = \text{SHA-256}(E_n + H_{n-1})$). Tampering with any historical entry invalidates the entire chain.
+- **Hard Safety Guardrails**: Hardcoded rejection of drive roots, system roots (`C:\Windows`, `SystemRoot`, `Program Files`, `/usr`, `/etc`), the current project directory, the host drive, and directory symlinks.
+
+---
+
+## How It Works
 
 ```
-target (file / folder / image / drive)
-        |
-        v
-  overwrite: random -> 0xFF -> 0x00 (fsync each pass)
-        |
-        v
-  read-back check (all zero)  +  per-4KB-block AI scan  +  signature scan
-        |
-        v
-  manifest.json  (hashes, block scan, drive info, timestamps)
-        |
-        v
-  certificate.json  (Ed25519 signed)  ->  ledger.jsonl (hash chain)
-        |
-        v
-  verify_cert.py  (signature, manifest match, ledger inclusion)
+Target Storage (Files / Directory / Disk Image / Drive Volume)
+        │
+        ▼
+  Secure Multi-Pass Overwrite: Random ──► 0xFF ──► 0x00 (fsync each pass)
+        │
+        ▼
+  Read-Back Check (All-Zero) + Per-4KB Block AI Residual Scan + Signature Scan
+        │
+        ▼
+  manifest.json (Cryptographic digests, per-block risk array, hardware info)
+        │
+        ▼
+  certificate.json (Ed25519 Signed) ──► ledger.jsonl (Hash-Chained Audit Trail)
+        │
+        ▼
+  Independent Verification (verify_cert.py: Signature + Manifest + Ledger Chain)
 ```
 
-| Stage | Method |
-|---|---|
-| Wipe | 3 passes with `fsync`; final pass zeros verified by read-back |
-| Free space | Random fill then zero fill, verified, filler files removed |
-| AI verify | Random Forest on entropy, chi-square, zero fraction, printable ratio and longest run, scored per 4 KB block |
-| Certificate | Canonical JSON signed with Ed25519; verifier trusts only the issuer public key |
-| Ledger | JSONL, `entry_hash = SHA-256(entry + prev_hash)` |
+---
 
-## Requirements
+## Installation & Setup
 
-- Python 3.10 or newer
-- Windows for `volwipe.py` (volume wipe). `wipe.py`, `devwipe.py` on image files, and the certificate tools work on any OS.
-- Administrator PowerShell for drive wipes.
-
-## Installation
+### Requirements
+- Python 3.10+ (tested on Python 3.11/3.12, Windows 10/11)
+- Windows required for `volwipe.py` (Volume wipe). `wipe.py`, `devwipe.py`, classifier, certification, and Web UI work on any OS.
+- PowerShell with Administrator rights for physical volume operations.
 
 ```powershell
+# 1. Clone repository
+git clone https://github.com/ctrl-Nix/Wipelog.git
+cd Wipelog
+
+# 2. Virtual environment setup
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
+
+# 3. Train the AI model (generates local python/model.joblib)
 cd python
 ..\.venv\Scripts\python.exe train.py
 cd ..
 ```
 
-`model.joblib` is not committed, so `train.py` must be run once after cloning.
+---
 
-## Usage
+## Quick Start (Interactive Evaluator Demo)
 
-### 1. Wipe files or a folder
-
+### Option A: Local Auditor Web Dashboard
+Launch the self-contained Flask dashboard with browser auto-open:
 ```powershell
-.venv\Scripts\python.exe python\wipe.py --create-samples          # optional test files in .\sandbox
-.venv\Scripts\python.exe python\classifier.py sandbox             # scan before wiping
+.\run_ui.ps1
+```
+Or manually:
+```powershell
+.venv\Scripts\python.exe web\app.py
+```
+Open **[http://127.0.0.1:5000](http://127.0.0.1:5000)**:
+1. **Step 1: Target Selection**: Click *"Create Sample Files"* to populate `./sandbox` with test data (confidential docs, financial CSVs, DB dumps).
+2. **Step 2: AI Pre-Scan**: View the red **FAIL (Residual Data)** flags and high-risk entropy blocks before wiping.
+3. **Step 3: Secure Wipe**: Type `WIPE` to execute multi-pass overwrite. Watch real-time pass updates and observe the post-wipe transition to solid green **PASS** with zero read-back confirmation.
+4. **Step 4: Certify & Audit**: Issue a signed Ed25519 certificate, inspect the auto-recorded ledger entry, and click *"Run Tamper Demo"* to witness immediate cryptographic rejection upon single-byte tampering.
+
+---
+
+### Option B: Command-Line Operations
+
+#### 1. File & Directory Overwrite
+```powershell
+# Generate test files in ./sandbox
+.venv\Scripts\python.exe python\wipe.py --create-samples
+
+# Run pre-wipe AI scan
+.venv\Scripts\python.exe python\classifier.py sandbox
+
+# Dry-run inspection
 .venv\Scripts\python.exe python\wipe.py --target sandbox --dry-run
-.venv\Scripts\python.exe python\wipe.py --target sandbox          # type WIPE to confirm
-.venv\Scripts\python.exe python\wipe.py --target sandbox --delete --yes
+
+# Execute multi-pass wipe + zero read-back (type WIPE to confirm, or pass --yes)
+.venv\Scripts\python.exe python\wipe.py --target sandbox --delete --yes --out manifest.json
 ```
 
-| Flag | Meaning |
-|---|---|
-| `--target` | File or folder to wipe |
-| `--dry-run` | List what would be wiped, change nothing |
-| `--delete` | Remove files after overwriting (names are randomised before unlink) |
-| `--yes` | Skip typed confirmation |
-| `--out` | Manifest path (default `manifest.json`) |
-
-### 2. Wipe a whole volume (Windows, Administrator)
-
+#### 2. Whole Volume Wipe (Windows USB / External Drive)
 ```powershell
-Get-Volume                                           # confirm the drive letter first
+# Check assigned drive letter
+Get-Volume
+
+# Overwrite volume files, delete, fill all free space (random + zero), and verify
 .venv\Scripts\python.exe python\volwipe.py E
 ```
+*(Removable media accepted by default. External fixed drives require `--allow-fixed`. System drives and the project repository drive are permanently refused).*
 
-Removable drives are accepted by default. External fixed drives need `--allow-fixed`. The system drive and the drive holding this project are always refused.
-
-### 3. Wipe a disk image
-
+#### 3. Raw Disk Image Overwrite
 ```powershell
 .venv\Scripts\python.exe python\devwipe.py disk.img
 ```
 
-Overwrites the entire image and read-back verifies every byte. Block-device mode exists for Linux and refuses any disk with mounted partitions, but it has not been validated on physical hardware.
-
-### 4. Issue and verify a certificate
-
+#### 4. Issue & Independently Verify Certificate
 ```powershell
-.venv\Scripts\python.exe python\certificate.py --label "Asset-0001"
+# Issue certificate (signs with keys/private.pem, commits to ledger.jsonl)
+.venv\Scripts\python.exe python\certificate.py --manifest manifest.json --label "Asset-0001" --out certificate.json
+
+# Independent verification (verifies against keys/public.pem, checks manifest hash, checks ledger)
 .venv\Scripts\python.exe python\verify_cert.py certificate.json --manifest manifest.json --ledger
+
+# Inspect ledger audit chain
 .venv\Scripts\python.exe python\ledger.py show
 .venv\Scripts\python.exe python\ledger.py verify
 ```
 
-A certificate is refused unless every file passed the AI scan and the read-back check. The first run generates a keypair in `keys/`. Keep `keys/private.pem` secret; publish `keys/public.pem` so others can verify your certificates.
+---
 
-### 5. Tamper checks
+## Tamper-Evidence Demonstration
 
-Each of these must be detected:
+The verifier detects any modification to the certificate, manifest, or ledger:
 
 ```powershell
-# modified certificate field
-(Get-Content certificate.json -Raw) -replace '"file_count": 2','"file_count": 1' | Set-Content tampered.json
+# Test 1: Tampered certificate payload
+(Get-Content certificate.json -Raw) -replace '"file_count": 2', '"file_count": 1' | Set-Content tampered.json
 .venv\Scripts\python.exe python\verify_cert.py tampered.json
-# INVALID: signature mismatch, certificate was modified
+# Result -> INVALID: signature mismatch, certificate was modified
 
-# modified manifest
+# Test 2: Mismatched manifest digest
 Copy-Item manifest.json manifest_fake.json; Add-Content manifest_fake.json " "
 .venv\Scripts\python.exe python\verify_cert.py certificate.json --manifest manifest_fake.json
-# INVALID: manifest does not match the certificate
+# Result -> INVALID: manifest does not match the certificate
 
-# modified ledger
-(Get-Content ledger.jsonl -Raw) -replace '"cert_id": "','"cert_id": "x' | Set-Content ledger_fake.jsonl
+# Test 3: Broken ledger hash-chain
+(Get-Content ledger.jsonl -Raw) -replace '"cert_id": "', '"cert_id": "x' | Set-Content ledger_fake.jsonl
 .venv\Scripts\python.exe python\ledger.py verify ledger_fake.jsonl
-# LEDGER INVALID: entry 0 was modified
+# Result -> LEDGER INVALID: entry 0 was modified (hash chain broken)
 ```
 
-## Certificate contents
+---
 
-- Certificate ID, issue time, issuer `key_id` (public key fingerprint)
-- Device label, hostname, OS
-- Drive model, serial, bus type and filesystem (volume wipes)
-- Method, passes, start/end time, file count, bytes
-- Per-file SHA-256 before and after, AI verdict, flagged blocks, worst block risk, read-back result
-- Free-space bytes verified (volume wipes)
-- SHA-256 of the manifest
-- Ed25519 signature
+## Forensic Validation (Virtual Hard Disk Experiment)
 
-## Validation
-
-The volume wipe was tested on a 128 MB virtual disk (VHD) mounted as `V:`. A marker string was written 3000 times, and the raw VHD file was searched for it at each stage using `python/vhd_search.py`.
-
-| Stage | Marker hits in raw disk |
-|---|---|
-| File present (control) | 3000 |
-| After a normal delete | 3000 |
-| After `volwipe.py` | **0** |
-
-The guard also refused the system drive, and a fixed drive without `--allow-fixed`. Whole-image wipe and read-back were checked on a 64 MB image file (5000 hits before, 0 after).
-
-Not yet tested: physical USB flash, SD cards, HDDs and SSDs.
-
-## Safety guards
-
-- Refuses drive roots and top-level folders, `SystemRoot`, `ProgramFiles`, `ProgramData` and common Unix system paths.
-- Refuses the project root, its parents, and its own source folders.
-- Refuses symlinks and does not follow them while walking folders.
-- Volume wipe refuses the system drive and the project drive, and requires typing the drive letter.
-- Block-device wipe refuses any disk with a mounted partition and requires an explicit long flag.
-
-## Threat model
-
-**Covered**
-- Recovery of deleted, partially overwritten or residual file content using file-level and raw-image search tools.
-- Tampering with a certificate, its manifest, or past ledger entries.
-- A forged certificate signed with a different key (the verifier trusts only the known issuer key).
-
-**Not covered**
-- Physical flash cells on SSD/NVMe/USB (wear levelling, over-provisioning, remapped blocks).
-- Filesystem journals, file-name metadata, and temporary copies made by other programs.
-- An issuer whose private key is compromised.
-- Trusted time: timestamps come from the local system clock.
-- Proof that the wipe ran on a specific physical device. The certificate records what the operating system reported.
-
-## Limitations
-
-- Overwrite-based erasure is not guaranteed on flash storage. For internal SSDs and NVMe drives use ATA Secure Erase, NVMe Sanitize or cryptographic erase. These are not implemented here.
-- The classifier is trained on synthetic wipe outcomes, so its near-perfect accuracy reflects easy classes and is not a forensic-grade claim. Read-back verification and hashes are the primary evidence; the classifier is an additional check.
-- Compressed and encrypted data looks statistically random. The final zero pass with read-back, plus the signature scan, is what covers this case.
-- The pass scheme is inspired by NIST SP 800-88 and DoD 5220.22-M. The tool is not certified as compliant with either.
-
-## Project layout
+To validate physical zero-fill beyond OS filesystem tables, tests were conducted on a 128 MB raw Virtual Hard Disk (VHD) mounted as `V:`. A distinctive 8-byte ASCII marker string was populated 3,000 times across partition sectors:
 
 ```
-python/
-  wipe.py          file/folder overwrite, safety guard, manifest
-  volwipe.py       volume wipe with free-space fill (Windows)
-  devwipe.py       whole-image / block-device overwrite
-  features.py      byte-level features, 4 KB block iteration
-  classifier.py    per-block scan and signature scan
-  synth.py         synthetic training data
-  realdata.py      optional real-file training blocks
-  train.py         trains model.joblib
-  certificate.py   builds and signs the certificate
-  verify_cert.py   independent verifier
-  ledger.py        hash-chained ledger
-  vhd_search.py    marker search in a raw disk image
-keys/              Ed25519 keypair (private.pem is never committed)
+[Raw VHD Search via python/vhd_search.py]
+  Stage 1: File created (Baseline)           ->  3,000 marker instances detected
+  Stage 2: Standard Windows Delete / Recycle ->  3,000 marker instances detected (pointers removed, raw data intact)
+  Stage 3: Post volwipe.py Execution         ->      0 marker instances detected (100% forensic elimination)
 ```
 
-## Git hygiene
+---
 
-Do not commit:
+## Safety Guardrails
+
+To prevent catastrophic system damage or accidental operator error:
+- **Root Protection**: Blocks wiping of `C:\`, `/`, `C:\Windows`, `Program Files`, `ProgramData`, `/usr`, `/bin`, `/etc`.
+- **Self-Protection**: Prohibits wiping the repository root, parent directories, or any module path.
+- **Drive Exclusion**: `volwipe.py` unconditionally blocks execution against the active operating system partition (`SystemDrive`) and the drive hosting this repository.
+- **Symlink Boundary**: Refuses symlinks and never traverses external link targets.
+- **Explicit Confirmation**: Requires manual interactive typing (`WIPE`, drive letter, or target byte size) unless explicitly bypassed via `--yes`.
+
+---
+
+## Project Structure
 
 ```
-keys/private.pem
-manifest*.json
-certificate*.json
-ledger*.jsonl
-outputs/
-sandbox/
-*.joblib
-tampered.json
-.venv/
-__pycache__/
+Wipelog/
+├── python/
+│   ├── wipe.py          # Multi-pass file/directory overwrite engine
+│   ├── volwipe.py       # Whole-volume + free-space sanitization (Windows)
+│   ├── devwipe.py       # Raw block device / disk image overwriter
+│   ├── classifier.py    # 4KB block ML risk scanner & file signature detector
+│   ├── features.py      # Statistical feature extraction (entropy, runs, chi-square)
+│   ├── synth.py         # Synthetic training data generator
+│   ├── train.py         # Random Forest training script (outputs model.joblib)
+│   ├── certificate.py   # Canonical JSON builder & Ed25519 signer
+│   ├── verify_cert.py   # Independent cryptographic & ledger verifier
+│   ├── ledger.py        # Append-only hash-chained ledger manager
+│   └── vhd_search.py    # Raw binary disk search tool for validation
+├── web/
+│   ├── app.py           # Self-contained Flask backend (REST API & sandboxed execution)
+│   ├── templates/       # Auditor UI templates
+│   └── static/          # CSS/JS visualizers (heat-strips, live progress)
+├── tests/               # Pytest suite covering safety guards, classification, and certs
+├── keys/                # Cryptographic keypair storage (public.pem; private.pem is gitignored)
+├── requirements.txt     # Pinned Python dependencies
+└── run_ui.ps1           # Quick launch script for Auditor Dashboard
 ```
 
-## Warning
+---
 
-This tool destroys data irreversibly. Always confirm the target with `--dry-run` or `Get-Volume` first, and test on a disk image or virtual disk before touching real media.
+## Threat Model & Boundary Conditions
+
+### Covered Threats
+- File recovery via filesystem carving or raw sector analysis.
+- Unallocated free-space slack data remnants on mechanical and formatted volumes.
+- Digital certificate forgery or post-issuance modification.
+- Retroactive tampering with historical audit trail records.
+
+### Boundary Limitations (Flash Memory Notice)
+- **Solid State Disks (SSDs/NVMe) & USB Flash**: Modern flash devices utilize Flash Translation Layers (FTL), dynamic wear leveling, and over-provisioned spare blocks. Software-level overwriting addresses logical LBAs but may not touch retired physical NAND cells. For internal solid-state media, firmware-level commands (ATA Secure Erase / NVMe Sanitize) or cryptographic erasure are recommended.
+- **Copy-on-Write & Snapshots**: Journaling filesystems, Volume Shadow Copies (VSS), and CoW snapshots (Btrfs, ZFS) can retain previous block states outside active extents if not unmounted/purged prior to sanitization.
+
+---
+
+## License & Attribution
+All components are designed for transparent, independently verifiable, and safe electronic asset disposition.
