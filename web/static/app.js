@@ -461,7 +461,7 @@ function renderHeatstripCanvas(canvasId, files) {
 
   const blockW = w / allRisks.length;
   allRisks.forEach((r, i) => {
-    ctx.fillStyle = r > 0.5 ? '#ef4444' : '#10b981';
+    ctx.fillStyle = r > 0.5 ? '#ED80E9' : '#10B981';
     ctx.fillRect(i * blockW, 0, blockW + 0.5, h);
   });
 }
