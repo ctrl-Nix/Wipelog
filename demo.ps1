@@ -114,16 +114,18 @@ Step 7 "TAMPER-EVIDENCE DEMONSTRATION" "Red"
 INFO "Attack 1: modifying file_count value in certificate payload by +999..."
 Write-Host ""
 $raw = Get-Content certificate.json -Raw
-# simple replace: find first occurrence of file_count number and replace
 $tampered = $raw -replace '"file_count":\s*(\d+)', '"file_count": 9999'
-$tampered | Set-Content tampered.json -Encoding utf8
+$tamperedPath = Join-Path $PWD "tampered.json"
+[System.IO.File]::WriteAllText($tamperedPath, $tampered)
 
-try {
-    & $PY $WL verify tampered.json 2>&1 | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
-} catch { }
+$oldEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+& $PY $WL verify tampered.json 2>&1 | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+$ErrorActionPreference = $oldEAP
+
 Write-Host ""
 FAIL "Attack 1 detected: INVALID -- cryptographic signature mismatch caught immediately!"
-Remove-Item tampered.json -ErrorAction SilentlyContinue
+Remove-Item $tamperedPath -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 800
 
 # --- 7b: Tampered ledger ---
@@ -131,22 +133,16 @@ Write-Host ""
 INFO "Attack 2: altering a past cert_id entry in ledger.jsonl hash chain..."
 $ledger = Get-Content ledger.jsonl -Raw -ErrorAction SilentlyContinue
 if ($ledger) {
-    $ledger -replace '"cert_id": "', '"cert_id": "TAMPERED_' | Set-Content ledger_fake.jsonl -Encoding utf8
+    $fakePath = Join-Path $PWD "ledger_fake.jsonl"
+    $fakeLedger = $ledger -replace '"cert_id": "', '"cert_id": "TAMPERED_'
+    [System.IO.File]::WriteAllText($fakePath, $fakeLedger)
 
-    # Write temp verifier script to avoid heredoc/piped-stdin issues
-    $tmpScript = [System.IO.Path]::GetTempFileName() + ".py"
-    @"
-import sys
-sys.path.insert(0,'python')
-from pathlib import Path
-import ledger as L
-ok, msg = L.verify(Path('ledger_fake.jsonl'))
-print('LEDGER INVALID: ' + msg if not ok else 'LEDGER VALID')
-"@ | Set-Content $tmpScript -Encoding utf8
+    $oldEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    & $PY $WL ledger verify --path ledger_fake.jsonl 2>&1 | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+    $ErrorActionPreference = $oldEAP
 
-    $result = & $PY $tmpScript 2>&1
-    Write-Host "  $result" -ForegroundColor Red
-    Remove-Item $tmpScript, ledger_fake.jsonl -ErrorAction SilentlyContinue
+    Remove-Item $fakePath -ErrorAction SilentlyContinue
 }
 Write-Host ""
 FAIL "Attack 2 detected: ledger hash chain broken -- historical tampering exposed!"
